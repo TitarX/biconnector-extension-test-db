@@ -6,14 +6,17 @@ services:
     container_name: test_mysql_db
     environment:
       MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: test_db
+      MYSQL_DATABASE: customer_db
       MYSQL_USER: testuser
       MYSQL_PASSWORD: testpass123
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
     networks:
       - db_network
     restart: unless-stopped
@@ -22,9 +25,10 @@ services:
     image: postgres:15
     container_name: test_postgres_db
     environment:
-      POSTGRES_DB: test_db
+      POSTGRES_DB: customer_db
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
       - "5432:5432"
     volumes:
