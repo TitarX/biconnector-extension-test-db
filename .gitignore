@@ -1,0 +1,29 @@
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Логи
+*.log
+logs/
+
+# Временные файлы
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Переменные окружения (если будут добавлены)
+.env
+.env.local
+.env.production
+
+# Backup файлы
+*.backup
+*.bak
+*.sql.gz
