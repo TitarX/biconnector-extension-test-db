@@ -26,8 +26,9 @@
 
 1. **Запуск контейнеров с базами данных:**
    ```bash
-   make up
+   make start
    ```
+   Эта команда создает контейнеры и общую Docker сеть для доступа других контейнеров.
 
 2. **Заполнение баз данных демо данными:**
    ```bash
@@ -38,7 +39,7 @@
 
 1. **Запуск контейнеров с базами данных:**
    ```cmd
-   run.bat up
+   run.bat start
    ```
 
 2. **Заполнение баз данных демо данными:**
@@ -67,7 +68,7 @@
 
 ### Make команды (Linux/Mac/Windows с Make)
 - `make help` - Показать справку по всем доступным командам
-- `make up` - Запустить контейнеры с базами данных
+- `make start` - Запустить контейнеры с базами данных
 - `make down` - Остановить контейнеры
 - `make restart` - Перезапустить контейнеры
 - `make logs` - Показать логи контейнеров
@@ -77,7 +78,7 @@
 
 ### Windows batch команды (для систем без Make)
 - `run.bat help` - Показать справку по всем доступным командам
-- `run.bat up` - Запустить контейнеры с базами данных
+- `run.bat start` - Запустить контейнеры с базами данных
 - `run.bat down` - Остановить контейнеры
 - `run.bat restart` - Перезапустить контейнеры
 - `run.bat logs` - Показать логи контейнеров
@@ -121,6 +122,56 @@ postgresql://testuser:testpass123@localhost:5432/test_db
 ```bash
 psql -h localhost -p 5432 -U testuser -d test_db
 ```
+
+## Доступ из других Docker контейнеров
+
+Базы данных доступны для других Docker контейнеров по именам сервисов через общую сеть `shared_db_network`.
+
+### Подключение контейнера к сети:
+
+**Метод 1: Запуск контейнера с сетью**
+```bash
+docker run --network shared_db_network your_image
+```
+
+**Метод 2: Подключение существующего контейнера**
+```bash
+docker network connect shared_db_network your_container_name
+```
+
+**Метод 3: Docker Compose**
+```yaml
+version: '3.8'
+services:
+  your_app:
+    image: your_image
+    networks:
+      - shared_db_network
+
+networks:
+  shared_db_network:
+    external: true
+    name: shared_db_network
+```
+
+### Подключение из контейнеров:
+
+**MySQL из других контейнеров:**
+- **Хост:** `mysql` (имя сервиса)
+- **Порт:** 3306
+- **Строка подключения:** `mysql://testuser:testpass123@mysql:3306/customer_db`
+
+**PostgreSQL из других контейнеров:**
+- **Хост:** `postgres` (имя сервиса)  
+- **Порт:** 5432
+- **Строка подключения:** `postgresql://testuser:testpass123@postgres:5432/customer_db`
+
+### Команды для управления сетью:
+- `make network-info` - Информация о сети и подключениях
+- `make create-network` - Создать сеть вручную (автоматически создается при `make start`)
+- `make remove-network` - Удалить сеть
+
+📖 **Подробная инструкция:** См. файл `NETWORK_ACCESS_GUIDE.md` для детальных примеров подключения.
 
 ## Описание демо данных
 

@@ -30,16 +30,16 @@ make stats
 
 | Command | Description | Usage |
 |---------|-------------|-------|
-| `make up` | Start database containers | Basic startup with 45-second initialization wait |
+| `make start` | Start database containers | Basic startup with 45-second initialization wait, creates shared network |
 | `make down` | Stop and remove containers (preserves data) | Safe shutdown maintaining data volumes |
 | `make stop` | Stop containers without removing | Quick stop for temporary shutdown |
 | `make remove` | Remove stopped containers | Cleanup after stop command |
-| `make restart` | Restart containers | Equivalent to down + up |
+| `make restart` | Restart containers | Equivalent to down + start |
 
 ### Example Usage:
 ```bash
 # Start the databases
-make up
+make start
 
 # Stop temporarily
 make stop
@@ -125,8 +125,16 @@ make rebuild
 | `make postgres-cli` | Connect to PostgreSQL CLI | Direct access to customer_db |
 
 ### Connection Information:
+
+#### From Host Machine:
 - **MySQL**: `localhost:3306` (user: testuser, pass: testpass123, db: customer_db)
 - **PostgreSQL**: `localhost:5432` (user: testuser, pass: testpass123, db: customer_db)
+
+#### From Other Docker Containers:
+- **MySQL**: `mysql:3306` (user: testuser, pass: testpass123, db: customer_db)
+- **PostgreSQL**: `postgres:5432` (user: testuser, pass: testpass123, db: customer_db)
+
+**Note**: Other containers must be connected to the `shared_db_network` network to access databases by service names.
 
 ### Example CLI Usage:
 ```bash
@@ -137,6 +145,84 @@ make mysql-cli
 # Connect to PostgreSQL  
 make postgres-cli
 # Then run: \dt; SELECT COUNT(*) FROM customers;
+```
+
+### Container Shell Access
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `make shell-mysql` | Open bash shell in MySQL container | Direct container access for debugging |
+| `make shell-postgres` | Open bash shell in PostgreSQL container | Direct container access for debugging |
+
+### Example Shell Usage:
+```bash
+# Access MySQL container shell
+make shell-mysql
+# Inside container: mysql -u testuser -ptestpass123 customer_db
+
+# Access PostgreSQL container shell  
+make shell-postgres
+# Inside container: psql -U testuser -d customer_db
+```
+
+## Network Management
+
+### Docker Network Commands
+
+| Command | Description | Purpose |
+|---------|-------------|---------|
+| `make create-network` | Create shared Docker network | Manual network setup |
+| `make remove-network` | Remove shared Docker network | Network cleanup |
+| `make network-info` | Show network information | Network diagnostics |
+
+### Network Access for Other Containers
+
+The databases are accessible from other Docker containers using service names:
+
+**Method 1: docker run with network**
+```bash
+# Run container connected to shared network
+docker run --network shared_db_network your_app_image
+
+# Inside container, connect to databases:
+# MySQL: mysql -h mysql -u testuser -ptestpass123 customer_db
+# PostgreSQL: psql -h postgres -U testuser -d customer_db
+```
+
+**Method 2: docker-compose.yml configuration**
+```yaml
+version: '3.8'
+services:
+  your_app:
+    image: your_app_image
+    networks:
+      - shared_db_network
+
+networks:
+  shared_db_network:
+    external: true
+    name: shared_db_network
+```
+
+**Method 3: Connection strings for applications**
+```bash
+# MySQL connection string
+mysql://testuser:testpass123@mysql:3306/customer_db
+
+# PostgreSQL connection string  
+postgresql://testuser:testpass123@postgres:5432/customer_db
+```
+
+### Example Usage:
+```bash
+# Create network manually (auto-created with make start)
+make create-network
+
+# Check network status
+make network-info
+
+# Remove network (stops containers first)
+make remove-network
 ```
 
 ## Monitoring and Debugging
@@ -212,7 +298,7 @@ Similar structure with:
 1. **Containers won't start**:
    ```bash
    make clean
-   make up
+   make start
    ```
 
 2. **Database connection issues**:
@@ -263,7 +349,7 @@ Similar structure with:
 # Essential commands
 make help              # Show all commands
 make init              # Fresh start with data
-make up                # Start containers
+make start             # Start containers
 make down              # Stop containers
 make seed-data         # Load demo data
 make stats             # Show data statistics

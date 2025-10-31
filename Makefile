@@ -1,7 +1,7 @@
 # Makefile для управления тестовыми базами данных
 # Проект: Test Databases (MySQL + PostgreSQL)
 
-.PHONY: help up down stop remove restart logs status seed-data clean rebuild init recreate-mysql recreate-postgres recreate-all force-recreate test-connections backup restore stats mysql-cli postgres-cli shell-mysql shell-postgres
+.PHONY: help start down stop remove restart logs status seed-data clean rebuild init recreate-mysql recreate-postgres recreate-all force-recreate test-connections backup restore stats mysql-cli postgres-cli shell-mysql shell-postgres create-network remove-network network-info fix-network
 
 # Default target - show help
 all: help
@@ -44,22 +44,37 @@ help:
 	@echo "  make shell-mysql       - Open shell in MySQL container"
 	@echo "  make shell-postgres    - Open shell in PostgreSQL container"
 	@echo ""
+	@echo "Network Management:"
+	@echo "  make create-network    - Create shared Docker network"
+	@echo "  make remove-network    - Remove shared Docker network"
+	@echo "  make fix-network       - Fix network configuration issues"
+	@echo "  make network-info      - Show network and container information"
+	@echo ""
 	@echo "Connection Details:"
 	@echo "  MySQL:      localhost:3306 (user: testuser, pass: testpass123, db: customer_db)"
 	@echo "  PostgreSQL: localhost:5432 (user: testuser, pass: testpass123, db: customer_db)"
 
 # Start database containers
 start:
+	@echo "Ensuring shared network exists..."
+	@docker network create shared_db_network 2>nul || echo "Network 'shared_db_network' already exists"
 	@echo "Starting customer database containers..."
 	docker-compose -p customer-databases up -d
 	@echo "Waiting for database initialization (45 seconds)..."
-	@timeout /t 45 /nobreak >nul
+	@sleep 45 2>/dev/null || timeout 45 2>/dev/null || ping 127.0.0.1 -n 46 >nul 2>&1
 	@echo ""
 	@echo "Customer databases are ready!"
-	@echo "MySQL:      localhost:3306 (user: testuser, pass: testpass123, db: customer_db)"
-	@echo "PostgreSQL: localhost:5432 (user: testuser, pass: testpass123, db: customer_db)"
+	@echo ""
+	@echo "Host access (from host machine):"
+	@echo "  MySQL:      localhost:3306 (user: testuser, pass: testpass123, db: customer_db)"
+	@echo "  PostgreSQL: localhost:5432 (user: testuser, pass: testpass123, db: customer_db)"
+	@echo ""
+	@echo "Container access (from other Docker containers on shared_db_network):"
+	@echo "  MySQL:      mysql:3306 (user: testuser, pass: testpass123, db: customer_db)"
+	@echo "  PostgreSQL: postgres:5432 (user: testuser, pass: testpass123, db: customer_db)"
 	@echo ""
 	@echo "Run 'make seed-data' to populate with demo data"
+	@echo "Run 'make network-info' for detailed network information"
 
 # Stop and remove containers (preserves data volumes)
 down:
@@ -83,6 +98,19 @@ remove:
 restart: down start
 	@echo "Containers restarted successfully!"
 
+# Show container logs
+logs:
+	@echo "Showing container logs (press Ctrl+C to exit)..."
+	docker-compose -p customer-databases logs -f
+
+# Show container status
+status:
+	@echo "=== Container Status ==="
+	@docker-compose -p customer-databases ps
+	@echo ""
+	@echo "=== Volume Information ==="
+	@docker volume ls | grep customer-databases 2>/dev/null || docker volume ls | findstr customer-databases 2>nul || echo "No volumes found"
+
 # Recreate MySQL container only
 recreate-mysql:
 	@echo "Recreating MySQL container..."
@@ -90,7 +118,7 @@ recreate-mysql:
 	docker-compose -p customer-databases rm -f mysql
 	docker-compose -p customer-databases up -d mysql
 	@echo "Waiting for MySQL initialization..."
-	@timeout /t 30 /nobreak >nul
+	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 31 >nul 2>&1
 	@echo "MySQL container recreated successfully!"
 
 # Recreate PostgreSQL container only
@@ -100,14 +128,14 @@ recreate-postgres:
 	docker-compose -p customer-databases rm -f postgres
 	docker-compose -p customer-databases up -d postgres
 	@echo "Waiting for PostgreSQL initialization..."
-	@timeout /t 30 /nobreak >nul
+	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 31 >nul 2>&1
 	@echo "PostgreSQL container recreated successfully!"
 
 # Recreate all containers
 recreate-all:
 	@echo "This will recreate all containers. Data will be preserved in volumes."
 	@echo "Press Ctrl+C to cancel or Enter to continue..."
-	@pause >nul
+	@read -p "" dummy 2>/dev/null || true
 	@$(MAKE) down
 	@$(MAKE) start
 	@echo "All containers recreated successfully!"
@@ -116,14 +144,7 @@ recreate-all:
 force-recreate: down start
 	@echo "All containers force recreated!"
 
-# Показать логи
-logs:
-	docker-compose -p test-databases logs -f
 
-# Показать статус контейнеров
-status:
-	@echo "Статус контейнеров:"
-	docker-compose -p test-databases ps
 
 # Populate databases with comprehensive demo data
 seed-data:
@@ -155,7 +176,7 @@ test-connections:
 clean:
 	@echo "WARNING: This will remove all containers and data volumes!"
 	@echo "Press Ctrl+C to cancel or Enter to continue..."
-	@pause >nul
+	@read -p "" dummy 2>/dev/null || true
 	@echo "Performing full cleanup..."
 	docker-compose -p customer-databases down -v --remove-orphans
 	docker system prune -f
@@ -171,7 +192,7 @@ rebuild: clean
 # Full initialization: start containers + populate data
 init: start
 	@echo "Waiting for databases to be ready before seeding..."
-	@timeout /t 15 /nobreak >nul
+	@sleep 15 2>/dev/null || timeout 15 2>/dev/null || ping 127.0.0.1 -n 16 >nul 2>&1
 	@$(MAKE) seed-data
 	@echo ""
 	@echo "=== Full initialization completed! ==="
@@ -188,18 +209,6 @@ postgres-cli:
 	@echo "Available tables: customers, companies, customer_companies, addresses, orders, etc."
 	@docker exec -it test_postgres_db psql -U testuser -d customer_db
 
-# Show container logs
-logs:
-	@echo "Showing container logs (press Ctrl+C to exit)..."
-	docker-compose -p customer-databases logs -f
-
-# Show container status
-status:
-	@echo "=== Container Status ==="
-	@docker-compose -p customer-databases ps
-	@echo ""
-	@echo "=== Volume Information ==="
-	@docker volume ls | findstr customer-databases
 
 # Create database backups
 backup:
@@ -248,4 +257,54 @@ shell-postgres:
 	@echo "Opening shell in PostgreSQL container..."
 	@echo "Use 'exit' to leave the container shell"
 	@docker exec -it test_postgres_db /bin/bash
+
+# Network management commands
+create-network:
+	@echo "Creating shared Docker network for database access..."
+	@docker network create shared_db_network 2>nul || echo "Network 'shared_db_network' already exists"
+	@echo "Network 'shared_db_network' is ready for use"
+	@echo ""
+	@echo "Other containers can now connect using:"
+	@echo "  docker run --network shared_db_network your_container"
+	@echo "  Or add to docker-compose.yml:"
+	@echo "    networks:"
+	@echo "      - shared_db_network"
+	@echo ""
+	@echo "Database hostnames within network:"
+	@echo "  MySQL: mysql (port 3306)"
+	@echo "  PostgreSQL: postgres (port 5432)"
+
+remove-network:
+	@echo "Stopping containers before removing network..."
+	@$(MAKE) down
+	@echo "Removing shared Docker network..."
+	@docker network rm shared_db_network 2>nul || echo "Network 'shared_db_network' does not exist"
+	@echo "Network removed successfully"
+
+# Fix network issues - recreate network with correct labels
+fix-network:
+	@echo "Fixing network configuration issues..."
+	@echo "Stopping containers..."
+	@$(MAKE) down
+	@echo "Removing existing network..."
+	@docker network rm shared_db_network 2>nul || echo "Network doesn't exist"
+	@echo "Creating network with correct configuration..."
+	@docker network create shared_db_network
+	@echo "Network fixed successfully"
+
+network-info:
+	@echo "=== Docker Network Information ==="
+	@echo ""
+	@echo "Shared network details:"
+	@docker network inspect shared_db_network 2>nul || echo "Network 'shared_db_network' not found. Run 'make create-network' first."
+	@echo ""
+	@echo "Connected containers:"
+	@docker network ls --filter name=shared_db_network --format "table {{.Name}}\t{{.Driver}}\t{{.Scope}}" 2>nul || echo "No networks found"
+	@echo ""
+	@echo "Database container status:"
+	@docker ps --filter name=test_mysql_db --filter name=test_postgres_db --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>nul || echo "No database containers running"
+	@echo ""
+	@echo "Connection examples for other containers:"
+	@echo "  MySQL connection string: mysql://testuser:testpass123@mysql:3306/customer_db"
+	@echo "  PostgreSQL connection string: postgresql://testuser:testpass123@postgres:5432/customer_db"
 

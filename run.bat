@@ -4,6 +4,7 @@ REM Script for managing Docker containers with databases (Windows)
 
 if "%1"=="help" goto :help
 if "%1"=="up" goto :up
+if "%1"=="start" goto :up
 if "%1"=="down" goto :down
 if "%1"=="restart" goto :restart
 if "%1"=="logs" goto :logs
@@ -13,7 +14,8 @@ if "%1"=="clean" goto :clean
 
 :help
 echo Available commands:
-echo   run.bat up          - Start database containers
+echo   run.bat start       - Start database containers (creates shared network)
+echo   run.bat up          - Start database containers (alias for start)
 echo   run.bat down        - Stop containers
 echo   run.bat restart     - Restart containers
 echo   run.bat logs        - Show container logs
@@ -24,13 +26,21 @@ echo   run.bat help        - Show this help
 goto :end
 
 :up
+echo Creating shared network if it doesn't exist...
+docker network create shared_db_network 2>nul || echo Network already exists
 echo Starting database containers...
 docker-compose -p test-databases up -d
 echo Waiting for database initialization (30 seconds)...
 timeout /t 30 /nobreak >nul
 echo Databases are ready to work!
-echo MySQL: localhost:3306 (user: testuser, password: testpass123, db: test_db)
-echo PostgreSQL: localhost:5432 (user: testuser, password: testpass123, db: test_db)
+echo.
+echo Host access:
+echo   MySQL: localhost:3306 (user: testuser, password: testpass123, db: customer_db)
+echo   PostgreSQL: localhost:5432 (user: testuser, password: testpass123, db: customer_db)
+echo.
+echo Container access (from shared_db_network):
+echo   MySQL: mysql:3306 (user: testuser, password: testpass123, db: customer_db)
+echo   PostgreSQL: postgres:5432 (user: testuser, password: testpass123, db: customer_db)
 goto :end
 
 :down
@@ -41,6 +51,8 @@ goto :end
 :restart
 echo Restarting containers...
 docker-compose -p test-databases down
+echo Creating shared network if it doesn't exist...
+docker network create shared_db_network 2>nul || echo Network already exists
 docker-compose -p test-databases up -d
 echo Waiting for database initialization (30 seconds)...
 timeout /t 30 /nobreak >nul
