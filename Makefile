@@ -1,7 +1,7 @@
 # Makefile для управления тестовыми базами данных
 # Проект: Test Databases (MySQL + PostgreSQL)
 
-.PHONY: help up down stop remove restart logs status seed-data clean rebuild init recreate-mysql recreate-postgres recreate-all force-recreate test-connections backup restore stats mysql-cli postgres-cli
+.PHONY: help up down stop remove restart logs status seed-data clean rebuild init recreate-mysql recreate-postgres recreate-all force-recreate test-connections backup restore stats mysql-cli postgres-cli shell-mysql shell-postgres
 
 # Default target - show help
 all: help
@@ -12,7 +12,7 @@ help:
 	@echo ""
 	@echo "Basic Operations:"
 	@echo "  make help              - Show this help menu"
-	@echo "  make up                - Start database containers"
+	@echo "  make start             - Start database containers"
 	@echo "  make down              - Stop containers (preserves data)"
 	@echo "  make stop              - Stop containers without removing"
 	@echo "  make remove            - Remove stopped containers"
@@ -36,18 +36,20 @@ help:
 	@echo "Monitoring & Debugging:"
 	@echo "  make logs              - Show container logs"
 	@echo "  make status            - Show container status"
-	@echo "  make init              - Full initialization (up + seed)"
+	@echo "  make init              - Full initialization (start + seed)"
 	@echo ""
 	@echo "Database Access:"
 	@echo "  make mysql-cli         - Connect to MySQL CLI"
 	@echo "  make postgres-cli      - Connect to PostgreSQL CLI"
+	@echo "  make shell-mysql       - Open shell in MySQL container"
+	@echo "  make shell-postgres    - Open shell in PostgreSQL container"
 	@echo ""
 	@echo "Connection Details:"
 	@echo "  MySQL:      localhost:3306 (user: testuser, pass: testpass123, db: customer_db)"
 	@echo "  PostgreSQL: localhost:5432 (user: testuser, pass: testpass123, db: customer_db)"
 
 # Start database containers
-up:
+start:
 	@echo "Starting customer database containers..."
 	docker-compose -p customer-databases up -d
 	@echo "Waiting for database initialization (45 seconds)..."
@@ -78,7 +80,7 @@ remove:
 	@echo "Containers removed successfully!"
 
 # Restart containers
-restart: down up
+restart: down start
 	@echo "Containers restarted successfully!"
 
 # Recreate MySQL container only
@@ -107,11 +109,11 @@ recreate-all:
 	@echo "Press Ctrl+C to cancel or Enter to continue..."
 	@pause > nul
 	@$(MAKE) down
-	@$(MAKE) up
+	@$(MAKE) start
 	@echo "All containers recreated successfully!"
 
 # Force recreate without confirmation
-force-recreate: down up
+force-recreate: down start
 	@echo "All containers force recreated!"
 
 # Показать логи
@@ -163,11 +165,11 @@ clean:
 rebuild: clean
 	@echo "Rebuilding containers from scratch..."
 	docker-compose -p customer-databases build --no-cache
-	@$(MAKE) up
+	@$(MAKE) start
 	@echo "Containers rebuilt successfully!"
 
 # Full initialization: start containers + populate data
-init: up
+init: start
 	@echo "Waiting for databases to be ready before seeding..."
 	@timeout /t 15 /nobreak > nul
 	@$(MAKE) seed-data
@@ -219,7 +221,7 @@ restore:
 	@dir backups\*.sql /B 2>nul || echo "No backup files found in backups/ directory"
 	@echo ""
 	@echo "WARNING: This will overwrite existing data!"
-	@echo "Make sure containers are running (make up)"
+	@echo "Make sure containers are running (make start)"
 	@echo "Specify backup file manually using docker exec commands"
 	@echo ""
 	@echo "Example restore commands:"
@@ -235,3 +237,15 @@ stats:
 	@echo ""
 	@echo "PostgreSQL Statistics:"
 	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'addresses', COUNT(*) FROM addresses ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
+
+# Container shell access commands
+shell-mysql:
+	@echo "Opening shell in MySQL container..."
+	@echo "Use 'exit' to leave the container shell"
+	@docker exec -it test_mysql_db /bin/bash
+
+shell-postgres:
+	@echo "Opening shell in PostgreSQL container..."
+	@echo "Use 'exit' to leave the container shell"
+	@docker exec -it test_postgres_db /bin/bash
+

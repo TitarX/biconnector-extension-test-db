@@ -27,3 +27,5 @@ Thumbs.db
 *.backup
 *.bak
 *.sql.gz
+
+nul
