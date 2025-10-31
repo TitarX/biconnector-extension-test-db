@@ -53,7 +53,7 @@ start:
 	@echo "Starting customer database containers..."
 	docker-compose -p customer-databases up -d
 	@echo "Waiting for database initialization (45 seconds)..."
-	@timeout /t 45 /nobreak > nul
+	@timeout /t 45 /nobreak >nul
 	@echo ""
 	@echo "Customer databases are ready!"
 	@echo "MySQL:      localhost:3306 (user: testuser, pass: testpass123, db: customer_db)"
@@ -90,7 +90,7 @@ recreate-mysql:
 	docker-compose -p customer-databases rm -f mysql
 	docker-compose -p customer-databases up -d mysql
 	@echo "Waiting for MySQL initialization..."
-	@timeout /t 30 /nobreak > nul
+	@timeout /t 30 /nobreak >nul
 	@echo "MySQL container recreated successfully!"
 
 # Recreate PostgreSQL container only
@@ -100,14 +100,14 @@ recreate-postgres:
 	docker-compose -p customer-databases rm -f postgres
 	docker-compose -p customer-databases up -d postgres
 	@echo "Waiting for PostgreSQL initialization..."
-	@timeout /t 30 /nobreak > nul
+	@timeout /t 30 /nobreak >nul
 	@echo "PostgreSQL container recreated successfully!"
 
 # Recreate all containers
 recreate-all:
 	@echo "This will recreate all containers. Data will be preserved in volumes."
 	@echo "Press Ctrl+C to cancel or Enter to continue..."
-	@pause > nul
+	@pause >nul
 	@$(MAKE) down
 	@$(MAKE) start
 	@echo "All containers recreated successfully!"
@@ -155,7 +155,7 @@ test-connections:
 clean:
 	@echo "WARNING: This will remove all containers and data volumes!"
 	@echo "Press Ctrl+C to cancel or Enter to continue..."
-	@pause > nul
+	@pause >nul
 	@echo "Performing full cleanup..."
 	docker-compose -p customer-databases down -v --remove-orphans
 	docker system prune -f
@@ -171,7 +171,7 @@ rebuild: clean
 # Full initialization: start containers + populate data
 init: start
 	@echo "Waiting for databases to be ready before seeding..."
-	@timeout /t 15 /nobreak > nul
+	@timeout /t 15 /nobreak >nul
 	@$(MAKE) seed-data
 	@echo ""
 	@echo "=== Full initialization completed! ==="

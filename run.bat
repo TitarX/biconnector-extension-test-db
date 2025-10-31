@@ -27,7 +27,7 @@ goto :end
 echo Starting database containers...
 docker-compose -p test-databases up -d
 echo Waiting for database initialization (30 seconds)...
-timeout /t 30 /nobreak > nul
+timeout /t 30 /nobreak >nul
 echo Databases are ready to work!
 echo MySQL: localhost:3306 (user: testuser, password: testpass123, db: test_db)
 echo PostgreSQL: localhost:5432 (user: testuser, password: testpass123, db: test_db)
@@ -43,7 +43,7 @@ echo Restarting containers...
 docker-compose -p test-databases down
 docker-compose -p test-databases up -d
 echo Waiting for database initialization (30 seconds)...
-timeout /t 30 /nobreak > nul
+timeout /t 30 /nobreak >nul
 echo Databases are ready to work!
 goto :end
 
