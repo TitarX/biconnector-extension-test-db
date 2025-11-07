@@ -239,10 +239,10 @@ stats:
 	@echo "=== Customer Database Statistics ==="
 	@echo ""
 	@echo "MySQL Statistics:"
-	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'CUSTOMERS' as table_name, COUNT(*) as count FROM CUSTOMERS UNION SELECT 'COMPANIES', COUNT(*) FROM COMPANIES UNION SELECT 'PRODUCTS', COUNT(*) FROM PRODUCTS UNION SELECT 'ORDERS', COUNT(*) FROM ORDERS UNION SELECT 'ORDER_ITEMS', COUNT(*) FROM ORDER_ITEMS UNION SELECT 'LEADS', COUNT(*) FROM LEADS UNION SELECT 'TASKS', COUNT(*) FROM TASKS UNION SELECT 'DEALS', COUNT(*) FROM DEALS;" 2>nul || echo "MySQL not accessible"
+	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals;" 2>nul || echo "MySQL not accessible"
 	@echo ""
 	@echo "PostgreSQL Statistics:"
-	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'CUSTOMERS' as table_name, COUNT(*) as count FROM CUSTOMERS UNION SELECT 'COMPANIES', COUNT(*) FROM COMPANIES UNION SELECT 'PRODUCTS', COUNT(*) FROM PRODUCTS UNION SELECT 'ORDERS', COUNT(*) FROM ORDERS UNION SELECT 'ORDER_ITEMS', COUNT(*) FROM ORDER_ITEMS UNION SELECT 'LEADS', COUNT(*) FROM LEADS UNION SELECT 'TASKS', COUNT(*) FROM TASKS UNION SELECT 'DEALS', COUNT(*) FROM DEALS ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
+	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
 
 # Container shell access commands
 shell-mysql:
