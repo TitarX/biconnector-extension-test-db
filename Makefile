@@ -144,8 +144,6 @@ recreate-all:
 force-recreate: down start
 	@echo "All containers force recreated!"
 
-
-
 # Populate databases with comprehensive demo data
 seed-data:
 	@echo "=== Database Demo Data Status ==="
@@ -175,6 +173,16 @@ test-connections:
 	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'PostgreSQL Connection OK' as status, version() as version, current_database() as current_db;"
 	@echo ""
 	@echo "Database connections tested successfully!"
+
+# Show database statistics
+stats:
+	@echo "=== Customer Database Statistics ==="
+	@echo ""
+	@echo "MySQL Statistics:"
+	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals;" 2>nul || echo "MySQL not accessible"
+	@echo ""
+	@echo "PostgreSQL Statistics:"
+	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
 
 # Full cleanup - removes containers and data volumes
 clean:
