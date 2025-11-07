@@ -59,7 +59,7 @@ start:
 	@echo "Ensuring shared network exists..."
 	@docker network create shared_db_network 2>nul || echo "Network 'shared_db_network' already exists"
 	@echo "Starting customer database containers..."
-	docker-compose -p customer-databases up -d
+	docker-compose up -d
 	@echo "Waiting for database initialization (45 seconds)..."
 	@sleep 45 2>/dev/null || timeout 45 2>/dev/null || ping 127.0.0.1 -n 46 >nul 2>&1
 	@echo ""
@@ -79,19 +79,19 @@ start:
 # Stop and remove containers (preserves data volumes)
 down:
 	@echo "Stopping and removing containers..."
-	docker-compose -p customer-databases down
+	docker-compose down
 	@echo "Containers stopped successfully!"
 
 # Stop containers without removing
 stop:
 	@echo "Stopping containers..."
-	docker-compose -p customer-databases stop
+	docker-compose stop
 	@echo "Containers stopped (not removed)"
 
 # Remove stopped containers
 remove:
 	@echo "Removing stopped containers..."
-	docker-compose -p customer-databases rm -f
+	docker-compose rm -f
 	@echo "Containers removed successfully!"
 
 # Restart containers
@@ -101,22 +101,22 @@ restart: down start
 # Show container logs
 logs:
 	@echo "Showing container logs (press Ctrl+C to exit)..."
-	docker-compose -p customer-databases logs -f
+	docker-compose logs -f
 
 # Show container status
 status:
 	@echo "=== Container Status ==="
-	@docker-compose -p customer-databases ps
+	@docker-compose ps
 	@echo ""
 	@echo "=== Volume Information ==="
-	@docker volume ls | grep customer-databases 2>/dev/null || docker volume ls | findstr customer-databases 2>nul || echo "No volumes found"
+	@docker volume ls | grep bce_test_db 2>/dev/null || docker volume ls | findstr bce_test_db 2>nul || echo "No volumes found"
 
 # Recreate MySQL container only
 recreate-mysql:
 	@echo "Recreating MySQL container..."
-	docker-compose -p customer-databases stop mysql
-	docker-compose -p customer-databases rm -f mysql
-	docker-compose -p customer-databases up -d mysql
+	docker-compose stop mysql
+	docker-compose rm -f mysql
+	docker-compose up -d mysql
 	@echo "Waiting for MySQL initialization..."
 	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 31 >nul 2>&1
 	@echo "MySQL container recreated successfully!"
@@ -124,9 +124,9 @@ recreate-mysql:
 # Recreate PostgreSQL container only
 recreate-postgres:
 	@echo "Recreating PostgreSQL container..."
-	docker-compose -p customer-databases stop postgres
-	docker-compose -p customer-databases rm -f postgres
-	docker-compose -p customer-databases up -d postgres
+	docker-compose stop postgres
+	docker-compose rm -f postgres
+	docker-compose up -d postgres
 	@echo "Waiting for PostgreSQL initialization..."
 	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 31 >nul 2>&1
 	@echo "PostgreSQL container recreated successfully!"
@@ -148,18 +148,15 @@ force-recreate: down start
 
 # Populate databases with comprehensive demo data
 seed-data:
-	@echo "Populating MySQL with comprehensive customer data..."
-	docker exec -i test_mysql_db mysql -u testuser -ptestpass123 customer_db < mysql/seed/demo_data.sql
-	@echo "MySQL data loaded successfully!"
+	@echo "Demo data is automatically loaded during container initialization!"
+	@echo "Data is loaded from mysql/init/02_demo_data.sql and postgres/init/02_demo_data.sql"
 	@echo ""
-	@echo "Populating PostgreSQL with comprehensive customer data..."
-	docker cp postgres/seed/demo_data.sql test_postgres_db:/tmp/demo_data.sql
-	docker exec -i test_postgres_db psql -U testuser -d customer_db -f /tmp/demo_data.sql
-	@echo "PostgreSQL data loaded successfully!"
+	@echo "To manually reload data:"
+	@echo "MySQL: docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateCustomers(5000);'"
+	@echo "PostgreSQL: Data was loaded during initialization"
 	@echo ""
-	@echo "Demo data successfully loaded into both databases!"
-	@echo "- MySQL: 20 customers with companies, addresses, orders, interactions"
-	@echo "- PostgreSQL: 20 users with companies, segments, tickets, preferences"
+	@echo "Current data statistics:"
+	@$(MAKE) stats
 
 # Test database connections
 test-connections:
@@ -178,14 +175,14 @@ clean:
 	@echo "Press Ctrl+C to cancel or Enter to continue..."
 	@read -p "" dummy 2>/dev/null || true
 	@echo "Performing full cleanup..."
-	docker-compose -p customer-databases down -v --remove-orphans
+	docker-compose down -v --remove-orphans
 	docker system prune -f
 	@echo "Full cleanup completed!"
 
 # Rebuild containers from scratch
 rebuild: clean
 	@echo "Rebuilding containers from scratch..."
-	docker-compose -p customer-databases build --no-cache
+	docker-compose build --no-cache
 	@$(MAKE) start
 	@echo "Containers rebuilt successfully!"
 
@@ -242,10 +239,10 @@ stats:
 	@echo "=== Customer Database Statistics ==="
 	@echo ""
 	@echo "MySQL Statistics:"
-	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'addresses', COUNT(*) FROM addresses;" 2>nul || echo "MySQL not accessible"
+	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'CUSTOMERS' as table_name, COUNT(*) as count FROM CUSTOMERS UNION SELECT 'COMPANIES', COUNT(*) FROM COMPANIES UNION SELECT 'PRODUCTS', COUNT(*) FROM PRODUCTS UNION SELECT 'ORDERS', COUNT(*) FROM ORDERS UNION SELECT 'ORDER_ITEMS', COUNT(*) FROM ORDER_ITEMS UNION SELECT 'LEADS', COUNT(*) FROM LEADS UNION SELECT 'TASKS', COUNT(*) FROM TASKS UNION SELECT 'DEALS', COUNT(*) FROM DEALS;" 2>nul || echo "MySQL not accessible"
 	@echo ""
 	@echo "PostgreSQL Statistics:"
-	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'addresses', COUNT(*) FROM addresses ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
+	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'CUSTOMERS' as table_name, COUNT(*) as count FROM CUSTOMERS UNION SELECT 'COMPANIES', COUNT(*) FROM COMPANIES UNION SELECT 'PRODUCTS', COUNT(*) FROM PRODUCTS UNION SELECT 'ORDERS', COUNT(*) FROM ORDERS UNION SELECT 'ORDER_ITEMS', COUNT(*) FROM ORDER_ITEMS UNION SELECT 'LEADS', COUNT(*) FROM LEADS UNION SELECT 'TASKS', COUNT(*) FROM TASKS UNION SELECT 'DEALS', COUNT(*) FROM DEALS ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
 
 # Container shell access commands
 shell-mysql:

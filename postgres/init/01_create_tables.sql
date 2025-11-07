@@ -7,236 +7,248 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 SET client_encoding = 'UTF8';
 
 -- Custom data types
-CREATE TYPE customer_status_type AS ENUM ('Active', 'Inactive', 'Suspended', 'Pending');
-CREATE TYPE customer_type_enum AS ENUM ('Individual', 'Business', 'Enterprise', 'VIP');
-CREATE TYPE gender_type AS ENUM ('Male', 'Female', 'Other', 'Prefer not to say');
-CREATE TYPE address_type AS ENUM ('Home', 'Work', 'Billing', 'Shipping', 'Other');
-CREATE TYPE contact_method_type AS ENUM ('Email', 'Phone', 'SMS', 'Mail');
-CREATE TYPE contact_frequency_type AS ENUM ('Daily', 'Weekly', 'Monthly', 'Quarterly', 'Never');
-CREATE TYPE company_size_type AS ENUM ('Startup', 'Small', 'Medium', 'Large', 'Enterprise');
-CREATE TYPE order_status_type AS ENUM ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded');
-CREATE TYPE payment_method_type AS ENUM ('Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'Cash', 'Crypto');
-CREATE TYPE payment_status_type AS ENUM ('Pending', 'Paid', 'Failed', 'Refunded', 'Partially Refunded');
-CREATE TYPE interaction_type AS ENUM ('Email', 'Phone', 'Meeting', 'Chat', 'Support', 'Sale', 'Marketing', 'Other');
-CREATE TYPE outcome_type AS ENUM ('Positive', 'Negative', 'Neutral', 'Follow-up Required');
-CREATE TYPE priority_type AS ENUM ('Low', 'Medium', 'High', 'Critical');
-CREATE TYPE ticket_status_type AS ENUM ('Open', 'In Progress', 'Resolved', 'Closed', 'Reopened');
+CREATE TYPE CUSTOMER_STATUS_TYPE AS ENUM ('Active', 'Inactive', 'Suspended', 'Pending');
+CREATE TYPE CUSTOMER_TYPE_ENUM AS ENUM ('Individual', 'Business', 'Enterprise', 'VIP');
+CREATE TYPE GENDER_TYPE AS ENUM ('Male', 'Female', 'Other', 'Prefer not to say');
+CREATE TYPE ADDRESS_TYPE AS ENUM ('Home', 'Work', 'Billing', 'Shipping', 'Other');
+CREATE TYPE CONTACT_METHOD_TYPE AS ENUM ('Email', 'Phone', 'SMS', 'Mail');
+CREATE TYPE CONTACT_FREQUENCY_TYPE AS ENUM ('Daily', 'Weekly', 'Monthly', 'Quarterly', 'Never');
+CREATE TYPE COMPANY_SIZE_TYPE AS ENUM ('Startup', 'Small', 'Medium', 'Large', 'Enterprise');
+CREATE TYPE ORDER_STATUS_TYPE AS ENUM ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded');
+CREATE TYPE PAYMENT_METHOD_TYPE AS ENUM ('Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'Cash', 'Crypto');
+CREATE TYPE PAYMENT_STATUS_TYPE AS ENUM ('Pending', 'Paid', 'Failed', 'Refunded', 'Partially Refunded');
+CREATE TYPE INTERACTION_TYPE AS ENUM ('Email', 'Phone', 'Meeting', 'Chat', 'Support', 'Sale', 'Marketing', 'Other');
+CREATE TYPE OUTCOME_TYPE AS ENUM ('Positive', 'Negative', 'Neutral', 'Follow-up Required');
+CREATE TYPE PRIORITY_TYPE AS ENUM ('Low', 'Medium', 'High', 'Critical');
+CREATE TYPE TICKET_STATUS_TYPE AS ENUM ('Open', 'In Progress', 'Resolved', 'Closed', 'Reopened');
+CREATE TYPE DEAL_STAGE_TYPE AS ENUM ('Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost');
+CREATE TYPE INVOICE_STATUS_TYPE AS ENUM ('Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled');
+CREATE TYPE DELIVERY_STATUS_TYPE AS ENUM ('Preparing', 'Shipped', 'In Transit', 'Delivered', 'Failed');
+CREATE TYPE LEAD_STATUS_TYPE AS ENUM ('New', 'Contacted', 'Qualified', 'Disqualified', 'Converted');
+CREATE TYPE TASK_STATUS_TYPE AS ENUM ('Not Started', 'In Progress', 'Completed', 'Deferred');
+
 
 -- Customers table - main customer information
-CREATE TABLE IF NOT EXISTS customers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_code VARCHAR(20) UNIQUE NOT NULL,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    phone VARCHAR(25),
-    mobile VARCHAR(25),
-    date_of_birth DATE,
-    gender gender_type DEFAULT 'Prefer not to say',
-    registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP WITH TIME ZONE,
-    status customer_status_type DEFAULT 'Active',
-    customer_type customer_type_enum DEFAULT 'Individual',
-    preferred_language VARCHAR(5) DEFAULT 'en',
-    timezone VARCHAR(50) DEFAULT 'UTC',
-    avatar_url VARCHAR(255),
-    notes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS CUSTOMERS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    CUSTOMER_CODE VARCHAR(20) UNIQUE NOT NULL,
+    FIRST_NAME VARCHAR(100) NOT NULL,
+    LAST_NAME VARCHAR(100) NOT NULL,
+    EMAIL VARCHAR(150) UNIQUE NOT NULL,
+    PHONE VARCHAR(25),
+    MOBILE VARCHAR(25),
+    DATE_OF_BIRTH DATE,
+    GENDER GENDER_TYPE DEFAULT 'Prefer not to say',
+    REGISTRATION_DATE TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    LAST_LOGIN TIMESTAMP WITH TIME ZONE,
+    STATUS CUSTOMER_STATUS_TYPE DEFAULT 'Active',
+    CUSTOMER_TYPE CUSTOMER_TYPE_ENUM DEFAULT 'Individual',
+    PREFERRED_LANGUAGE VARCHAR(5) DEFAULT 'en',
+    TIMEZONE VARCHAR(50) DEFAULT 'UTC',
+    AVATAR_URL VARCHAR(255),
+    NOTES TEXT,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Companies table - business customer information
-CREATE TABLE IF NOT EXISTS companies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_name VARCHAR(200) NOT NULL,
-    legal_name VARCHAR(200),
-    registration_number VARCHAR(50),
-    tax_number VARCHAR(50),
-    industry VARCHAR(100),
-    company_size company_size_type DEFAULT 'Small',
-    website VARCHAR(255),
-    founded_year INTEGER CHECK (founded_year > 1800 AND founded_year <= EXTRACT(YEAR FROM CURRENT_DATE)),
-    description TEXT,
-    annual_revenue NUMERIC(15,2),
-    employee_count INTEGER CHECK (employee_count >= 0),
-    logo_url VARCHAR(255),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS COMPANIES (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    COMPANY_NAME VARCHAR(200) NOT NULL,
+    LEGAL_NAME VARCHAR(200),
+    REGISTRATION_NUMBER VARCHAR(50),
+    TAX_NUMBER VARCHAR(50),
+    INDUSTRY VARCHAR(100),
+    COMPANY_SIZE COMPANY_SIZE_TYPE DEFAULT 'Small',
+    WEBSITE VARCHAR(255),
+    FOUNDED_YEAR INTEGER CHECK (FOUNDED_YEAR > 1800 AND FOUNDED_YEAR <= EXTRACT(YEAR FROM CURRENT_DATE)),
+    DESCRIPTION TEXT,
+    ANNUAL_REVENUE NUMERIC(15,2),
+    EMPLOYEE_COUNT INTEGER CHECK (EMPLOYEE_COUNT >= 0),
+    LOGO_URL VARCHAR(255),
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Customer company relationships
-CREATE TABLE IF NOT EXISTS customer_companies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    position VARCHAR(100),
-    department VARCHAR(100),
-    is_primary BOOLEAN DEFAULT FALSE,
-    start_date DATE,
-    end_date DATE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_customer_company UNIQUE (customer_id, company_id)
+CREATE TABLE IF NOT EXISTS CUSTOMER_COMPANIES (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    CUSTOMER_ID UUID NOT NULL REFERENCES CUSTOMERS(ID) ON DELETE CASCADE,
+    COMPANY_ID UUID NOT NULL REFERENCES COMPANIES(ID) ON DELETE CASCADE,
+    POSITION VARCHAR(100),
+    DEPARTMENT VARCHAR(100),
+    IS_PRIMARY BOOLEAN DEFAULT FALSE,
+    START_DATE DATE,
+    END_DATE DATE,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UNIQUE_CUSTOMER_COMPANY UNIQUE (CUSTOMER_ID, COMPANY_ID)
 );
 
 -- Addresses table
-CREATE TABLE IF NOT EXISTS addresses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    address_type address_type DEFAULT 'Home',
-    street_address VARCHAR(255) NOT NULL,
-    apartment VARCHAR(50),
-    city VARCHAR(100) NOT NULL,
-    state_province VARCHAR(100),
-    postal_code VARCHAR(20),
-    country VARCHAR(100) NOT NULL,
-    is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS ADDRESSES (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    CUSTOMER_ID UUID NOT NULL REFERENCES CUSTOMERS(ID) ON DELETE CASCADE,
+    ADDRESS_TYPE ADDRESS_TYPE DEFAULT 'Home',
+    STREET_ADDRESS VARCHAR(255) NOT NULL,
+    APARTMENT VARCHAR(50),
+    CITY VARCHAR(100) NOT NULL,
+    STATE_PROVINCE VARCHAR(100),
+    POSTAL_CODE VARCHAR(20),
+    COUNTRY VARCHAR(100) NOT NULL,
+    IS_DEFAULT BOOLEAN DEFAULT FALSE,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Communication preferences
-CREATE TABLE IF NOT EXISTS communication_preferences (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    email_marketing BOOLEAN DEFAULT TRUE,
-    sms_notifications BOOLEAN DEFAULT FALSE,
-    phone_calls BOOLEAN DEFAULT TRUE,
-    newsletter BOOLEAN DEFAULT FALSE,
-    promotional_offers BOOLEAN DEFAULT TRUE,
-    event_invitations BOOLEAN DEFAULT FALSE,
-    preferred_contact_method contact_method_type DEFAULT 'Email',
-    contact_frequency contact_frequency_type DEFAULT 'Weekly',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_customer_prefs UNIQUE (customer_id)
+CREATE TABLE IF NOT EXISTS COMMUNICATION_PREFERENCES (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    CUSTOMER_ID UUID NOT NULL REFERENCES CUSTOMERS(ID) ON DELETE CASCADE,
+    EMAIL_MARKETING BOOLEAN DEFAULT TRUE,
+    SMS_MARKETING BOOLEAN DEFAULT FALSE,
+    PHONE_CALLS BOOLEAN DEFAULT FALSE,
+    PREFERRED_CONTACT_METHOD CONTACT_METHOD_TYPE DEFAULT 'Email',
+    CONTACT_FREQUENCY CONTACT_FREQUENCY_TYPE DEFAULT 'Weekly',
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customer segments
-CREATE TABLE IF NOT EXISTS customer_segments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    segment_name VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    criteria JSONB,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- Products table
+CREATE TABLE IF NOT EXISTS PRODUCTS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    PRODUCT_NAME VARCHAR(255) NOT NULL,
+    DESCRIPTION TEXT,
+    PRICE NUMERIC(10, 2) NOT NULL,
+    SKU VARCHAR(100) UNIQUE NOT NULL,
+    STOCK_QUANTITY INT DEFAULT 0,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customer segment assignments
-CREATE TABLE IF NOT EXISTS customer_segment_assignments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    segment_id UUID NOT NULL REFERENCES customer_segments(id) ON DELETE CASCADE,
-    assigned_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    assigned_by VARCHAR(100),
-    is_active BOOLEAN DEFAULT TRUE,
-    CONSTRAINT unique_customer_segment UNIQUE (customer_id, segment_id)
+-- Orders table
+CREATE TABLE IF NOT EXISTS ORDERS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    CUSTOMER_ID UUID NOT NULL REFERENCES CUSTOMERS(ID) ON DELETE CASCADE,
+    ORDER_DATE TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    STATUS ORDER_STATUS_TYPE DEFAULT 'Pending',
+    TOTAL_AMOUNT NUMERIC(10, 2),
+    SHIPPING_ADDRESS_ID UUID REFERENCES ADDRESSES(ID) ON DELETE SET NULL,
+    BILLING_ADDRESS_ID UUID REFERENCES ADDRESSES(ID) ON DELETE SET NULL,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Orders/Transactions table
-CREATE TABLE IF NOT EXISTS orders (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_number VARCHAR(50) UNIQUE NOT NULL,
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    order_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    status order_status_type DEFAULT 'Pending',
-    total_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
-    currency VARCHAR(3) DEFAULT 'USD',
-    payment_method payment_method_type DEFAULT 'Credit Card',
-    payment_status payment_status_type DEFAULT 'Pending',
-    shipping_method VARCHAR(100),
-    tracking_number VARCHAR(100),
-    notes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- Order Items table
+CREATE TABLE IF NOT EXISTS ORDER_ITEMS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ORDER_ID UUID NOT NULL REFERENCES ORDERS(ID) ON DELETE CASCADE,
+    PRODUCT_ID UUID NOT NULL REFERENCES PRODUCTS(ID) ON DELETE CASCADE,
+    QUANTITY INT NOT NULL,
+    UNIT_PRICE NUMERIC(10, 2) NOT NULL
 );
 
--- Customer interactions/activities log
-CREATE TABLE IF NOT EXISTS customer_interactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    interaction_type interaction_type NOT NULL,
-    subject VARCHAR(255),
-    description TEXT,
-    interaction_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    duration_minutes INTEGER CHECK (duration_minutes >= 0),
-    outcome outcome_type DEFAULT 'Neutral',
-    agent_name VARCHAR(100),
-    channel VARCHAR(50),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- Leads table
+CREATE TABLE IF NOT EXISTS LEADS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    FIRST_NAME VARCHAR(100),
+    LAST_NAME VARCHAR(100),
+    EMAIL VARCHAR(150),
+    PHONE VARCHAR(25),
+    COMPANY_NAME VARCHAR(200),
+    STATUS LEAD_STATUS_TYPE DEFAULT 'New',
+    SOURCE VARCHAR(100),
+    ASSIGNED_TO UUID REFERENCES CUSTOMERS(ID) ON DELETE SET NULL,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customer support tickets
-CREATE TABLE IF NOT EXISTS support_tickets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    ticket_number VARCHAR(20) UNIQUE NOT NULL,
-    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    subject VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    priority priority_type DEFAULT 'Medium',
-    status ticket_status_type DEFAULT 'Open',
-    category VARCHAR(100),
-    assigned_to VARCHAR(100),
-    resolution TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP WITH TIME ZONE
+-- Tasks table
+CREATE TABLE IF NOT EXISTS TASKS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    TITLE VARCHAR(255) NOT NULL,
+    DESCRIPTION TEXT,
+    DUE_DATE DATE,
+    PRIORITY PRIORITY_TYPE DEFAULT 'Medium',
+    STATUS TASK_STATUS_TYPE DEFAULT 'Not Started',
+    ASSIGNED_TO UUID REFERENCES CUSTOMERS(ID) ON DELETE SET NULL,
+    RELATED_TO_TYPE VARCHAR(50),
+    RELATED_TO_ID UUID,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Deals table
+CREATE TABLE IF NOT EXISTS DEALS (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    DEAL_NAME VARCHAR(255) NOT NULL,
+    COMPANY_ID UUID REFERENCES COMPANIES(ID) ON DELETE SET NULL,
+    CONTACT_PERSON_ID UUID REFERENCES CUSTOMERS(ID) ON DELETE SET NULL,
+    AMOUNT NUMERIC(12, 2),
+    STAGE DEAL_STAGE_TYPE DEFAULT 'Prospecting',
+    CLOSE_DATE DATE,
+    ASSIGNED_TO UUID REFERENCES CUSTOMERS(ID) ON DELETE SET NULL,
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Invoices table
+CREATE TABLE IF NOT EXISTS INVOICES (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ORDER_ID UUID NOT NULL REFERENCES ORDERS(ID) ON DELETE CASCADE,
+    INVOICE_DATE DATE,
+    DUE_DATE DATE,
+    TOTAL_AMOUNT NUMERIC(10, 2),
+    STATUS INVOICE_STATUS_TYPE DEFAULT 'Draft',
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Deliveries table
+CREATE TABLE IF NOT EXISTS DELIVERIES (
+    ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ORDER_ID UUID NOT NULL REFERENCES ORDERS(ID) ON DELETE CASCADE,
+    SHIPPING_DATE DATE,
+    DELIVERY_DATE DATE,
+    CARRIER VARCHAR(100),
+    TRACKING_NUMBER VARCHAR(100),
+    STATUS DELIVERY_STATUS_TYPE DEFAULT 'Preparing',
+    CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
-CREATE INDEX IF NOT EXISTS idx_customers_customer_code ON customers(customer_code);
-CREATE INDEX IF NOT EXISTS idx_customers_registration_date ON customers(registration_date);
-CREATE INDEX IF NOT EXISTS idx_customers_status ON customers(status);
-CREATE INDEX IF NOT EXISTS idx_customers_customer_type ON customers(customer_type);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMERS_EMAIL ON CUSTOMERS(EMAIL);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMERS_CUSTOMER_CODE ON CUSTOMERS(CUSTOMER_CODE);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMERS_REGISTRATION_DATE ON CUSTOMERS(REGISTRATION_DATE);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMERS_STATUS ON CUSTOMERS(STATUS);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMERS_CUSTOMER_TYPE ON CUSTOMERS(CUSTOMER_TYPE);
 
-CREATE INDEX IF NOT EXISTS idx_companies_company_name ON companies(company_name);
-CREATE INDEX IF NOT EXISTS idx_companies_industry ON companies(industry);
-CREATE INDEX IF NOT EXISTS idx_companies_company_size ON companies(company_size);
+CREATE INDEX IF NOT EXISTS IDX_COMPANIES_COMPANY_NAME ON COMPANIES(COMPANY_NAME);
+CREATE INDEX IF NOT EXISTS IDX_COMPANIES_INDUSTRY ON COMPANIES(INDUSTRY);
+CREATE INDEX IF NOT EXISTS IDX_COMPANIES_COMPANY_SIZE ON COMPANIES(COMPANY_SIZE);
 
-CREATE INDEX IF NOT EXISTS idx_customer_companies_customer_id ON customer_companies(customer_id);
-CREATE INDEX IF NOT EXISTS idx_customer_companies_company_id ON customer_companies(company_id);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMER_COMPANIES_CUSTOMER_ID ON CUSTOMER_COMPANIES(CUSTOMER_ID);
+CREATE INDEX IF NOT EXISTS IDX_CUSTOMER_COMPANIES_COMPANY_ID ON CUSTOMER_COMPANIES(COMPANY_ID);
 
-CREATE INDEX IF NOT EXISTS idx_addresses_customer_id ON addresses(customer_id);
-CREATE INDEX IF NOT EXISTS idx_addresses_address_type ON addresses(address_type);
-CREATE INDEX IF NOT EXISTS idx_addresses_country ON addresses(country);
+CREATE INDEX IF NOT EXISTS IDX_ADDRESSES_CUSTOMER_ID ON ADDRESSES(CUSTOMER_ID);
+CREATE INDEX IF NOT EXISTS IDX_ADDRESSES_ADDRESS_TYPE ON ADDRESSES(ADDRESS_TYPE);
+CREATE INDEX IF NOT EXISTS IDX_ADDRESSES_COUNTRY ON ADDRESSES(COUNTRY);
 
-CREATE INDEX IF NOT EXISTS idx_customer_segments_segment_name ON customer_segments(segment_name);
-CREATE INDEX IF NOT EXISTS idx_customer_segments_is_active ON customer_segments(is_active);
-
-CREATE INDEX IF NOT EXISTS idx_customer_segment_assignments_customer_id ON customer_segment_assignments(customer_id);
-CREATE INDEX IF NOT EXISTS idx_customer_segment_assignments_segment_id ON customer_segment_assignments(segment_id);
-
-CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
-CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
-CREATE INDEX IF NOT EXISTS idx_orders_order_date ON orders(order_date);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders(payment_status);
-
-CREATE INDEX IF NOT EXISTS idx_customer_interactions_customer_id ON customer_interactions(customer_id);
-CREATE INDEX IF NOT EXISTS idx_customer_interactions_interaction_type ON customer_interactions(interaction_type);
-CREATE INDEX IF NOT EXISTS idx_customer_interactions_interaction_date ON customer_interactions(interaction_date);
-CREATE INDEX IF NOT EXISTS idx_customer_interactions_outcome ON customer_interactions(outcome);
-
-CREATE INDEX IF NOT EXISTS idx_support_tickets_ticket_number ON support_tickets(ticket_number);
-CREATE INDEX IF NOT EXISTS idx_support_tickets_customer_id ON support_tickets(customer_id);
-CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
-CREATE INDEX IF NOT EXISTS idx_support_tickets_priority ON support_tickets(priority);
-CREATE INDEX IF NOT EXISTS idx_support_tickets_created_at ON support_tickets(created_at);
+CREATE INDEX IF NOT EXISTS IDX_ORDERS_CUSTOMER_ID ON ORDERS(CUSTOMER_ID);
+CREATE INDEX IF NOT EXISTS IDX_ORDERS_ORDER_DATE ON ORDERS(ORDER_DATE);
+CREATE INDEX IF NOT EXISTS IDX_ORDERS_STATUS ON ORDERS(STATUS);
 
 -- Create triggers for automatic updated_at timestamp updates
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+CREATE OR REPLACE FUNCTION UPDATE_UPDATED_AT_COLUMN()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.UPDATED_AT = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_customers_updated_at BEFORE UPDATE ON customers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_addresses_updated_at BEFORE UPDATE ON addresses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_communication_preferences_updated_at BEFORE UPDATE ON communication_preferences FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_customer_segments_updated_at BEFORE UPDATE ON customer_segments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_support_tickets_updated_at BEFORE UPDATE ON support_tickets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER UPDATE_CUSTOMERS_UPDATED_AT BEFORE UPDATE ON CUSTOMERS FOR EACH ROW EXECUTE FUNCTION UPDATE_UPDATED_AT_COLUMN();
+CREATE TRIGGER UPDATE_COMPANIES_UPDATED_AT BEFORE UPDATE ON COMPANIES FOR EACH ROW EXECUTE FUNCTION UPDATE_UPDATED_AT_COLUMN();
+CREATE TRIGGER UPDATE_ADDRESSES_UPDATED_AT BEFORE UPDATE ON ADDRESSES FOR EACH ROW EXECUTE FUNCTION UPDATE_UPDATED_AT_COLUMN();
+CREATE TRIGGER UPDATE_COMMUNICATION_PREFERENCES_UPDATED_AT BEFORE UPDATE ON COMMUNICATION_PREFERENCES FOR EACH ROW EXECUTE FUNCTION UPDATE_UPDATED_AT_COLUMN();
+CREATE TRIGGER UPDATE_ORDERS_UPDATED_AT BEFORE UPDATE ON ORDERS FOR EACH ROW EXECUTE FUNCTION UPDATE_UPDATED_AT_COLUMN();
