@@ -148,12 +148,19 @@ force-recreate: down start
 
 # Populate databases with comprehensive demo data
 seed-data:
-	@echo "Demo data is automatically loaded during container initialization!"
-	@echo "Data is loaded from mysql/init/02_demo_data.sql and postgres/init/02_demo_data.sql"
+	@echo "=== Database Demo Data Status ==="
 	@echo ""
-	@echo "To manually reload data:"
-	@echo "MySQL: docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateCustomers(5000);'"
-	@echo "PostgreSQL: Data was loaded during initialization"
+	@echo "Demo data is automatically loaded during container initialization!"
+	@echo "MySQL: Loaded from mysql/init/02_demo_data.sql (stored procedures + execution)"
+	@echo "PostgreSQL: Loaded from postgres/init/02_demo_data.sql (direct INSERT statements)"
+	@echo ""
+	@echo "Tables created with proper naming convention:"
+	@echo "- Table names: lowercase (customers, orders, products, etc.)"
+	@echo "- Field names: UPPERCASE (ID, CUSTOMER_CODE, FIRST_NAME, etc.)"
+	@echo ""
+	@echo "To manually regenerate MySQL data (use stored procedures):"
+	@echo "  docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateCustomers(8000);'"
+	@echo "  docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateOrders(15000);'"
 	@echo ""
 	@echo "Current data statistics:"
 	@$(MAKE) stats
