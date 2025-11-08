@@ -218,16 +218,16 @@ BEGIN
 
         INSERT INTO tasks (TITLE, DESCRIPTION, CUSTOMER_ID, LEAD_ID, DEAL_ID, ASSIGNED_TO, STATUS, PRIORITY, DUE_DATE, ESTIMATED_HOURS)
         VALUES (
-            CONCAT('Task ', i + 1, ' - ', ELT(FLOOR(1 + RAND() * 6), 'Follow up call', 'Send proposal', 'Meeting preparation', 'Contract review', 'Technical demo', 'Training session')),
-            CONCAT('Task description for task ', i + 1),
-            IF(RAND() > 0.5, customer_id_var, NULL),
+            CONCAT('Task ', i + 1, ' - ', ELT(FLOOR(1 + RAND() * 5), 'Follow up', 'Meeting', 'Proposal', 'Review', 'Analysis')),
+            CONCAT('Task description for task number ', i + 1),
+            IF(RAND() > 0.4, customer_id_var, NULL),
             IF(RAND() > 0.7, lead_id_var, NULL),
             IF(RAND() > 0.6, deal_id_var, NULL),
-            ELT(FLOOR(1 + RAND() * 8), 'John Smith', 'Jane Doe', 'Mike Johnson', 'Sarah Wilson', 'David Brown', 'Lisa Davis', 'Tom Anderson', 'Amy Taylor'),
+            ELT(FLOOR(1 + RAND() * 5), 'Sales Rep A', 'Sales Rep B', 'Sales Rep C', 'Sales Rep D', 'Sales Rep E'),
             ELT(FLOOR(1 + RAND() * 4), 'Not Started', 'In Progress', 'Completed', 'Deferred'),
             ELT(FLOOR(1 + RAND() * 4), 'Low', 'Medium', 'High', 'Critical'),
-            DATE_ADD(NOW(), INTERVAL FLOOR(RAND() * 60) DAY),
-            ROUND(RAND() * 8 + 1, 1)
+            DATE_ADD(CURDATE(), INTERVAL FLOOR(RAND() * 90) DAY),
+            ROUND(RAND() * 40 + 1, 2)
         );
         SET i = i + 1;
     END WHILE;
@@ -241,54 +241,65 @@ BEGIN
     DECLARE order_id_var INT;
     DECLARE deal_id_var INT;
     DECLARE subtotal_var DECIMAL(12,2);
-    DECLARE tax_rate_var DECIMAL(5,2);
     DECLARE tax_amount_var DECIMAL(12,2);
+    DECLARE discount_amount_var DECIMAL(12,2);
+    DECLARE total_amount_var DECIMAL(12,2);
 
     WHILE i < num_rows DO
         SELECT ID INTO customer_id_var FROM customers ORDER BY RAND() LIMIT 1;
         SELECT ID INTO order_id_var FROM orders ORDER BY RAND() LIMIT 1;
         SELECT ID INTO deal_id_var FROM deals ORDER BY RAND() LIMIT 1;
-        SET subtotal_var = ROUND(RAND() * 10000 + 100, 2);
-        SET tax_rate_var = 20.00;
-        SET tax_amount_var = ROUND(subtotal_var * tax_rate_var / 100, 2);
 
-        INSERT INTO invoices (INVOICE_NUMBER, CUSTOMER_ID, ORDER_ID, DEAL_ID, INVOICE_DATE, DUE_DATE, STATUS, SUBTOTAL, TAX_RATE, TAX_AMOUNT, TOTAL_AMOUNT)
+        SET subtotal_var = ROUND(RAND() * 50000 + 1000, 2);
+        SET tax_amount_var = ROUND(subtotal_var * 0.2, 2);
+        SET discount_amount_var = ROUND(RAND() * 5000, 2);
+        SET total_amount_var = subtotal_var + tax_amount_var - discount_amount_var;
+
+        INSERT INTO invoices (INVOICE_NUMBER, CUSTOMER_ID, ORDER_ID, DEAL_ID, INVOICE_DATE, DUE_DATE, STATUS, SUBTOTAL, TAX_RATE, TAX_AMOUNT, DISCOUNT_AMOUNT, TOTAL_AMOUNT, CURRENCY, NOTES)
         VALUES (
-            CONCAT('INV', LPAD(i + 1, 8, '0')),
+            CONCAT('INV', LPAD(i + 1, 8, '0'), '/', YEAR(CURDATE())),
             customer_id_var,
-            IF(RAND() > 0.5, order_id_var, NULL),
+            IF(RAND() > 0.3, order_id_var, NULL),
             IF(RAND() > 0.7, deal_id_var, NULL),
-            DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 90) DAY),
-            DATE_ADD(DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 90) DAY), INTERVAL 30 DAY),
+            DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 180) DAY),
+            DATE_ADD(DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 180) DAY), INTERVAL 30 DAY),
             ELT(FLOOR(1 + RAND() * 5), 'Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled'),
             subtotal_var,
-            tax_rate_var,
+            20.0,
             tax_amount_var,
-            subtotal_var + tax_amount_var
+            discount_amount_var,
+            total_amount_var,
+            'RUB',
+            CONCAT('Invoice notes for invoice ', i + 1, '. Payment terms: 30 days.')
         );
         SET i = i + 1;
     END WHILE;
 END$$
 
--- Procedure to generate support tickets
-CREATE PROCEDURE GenerateSupportTickets(IN num_rows INT)
+-- Procedure to generate deliveries
+CREATE PROCEDURE GenerateDeliveries(IN num_rows INT)
 BEGIN
     DECLARE i INT DEFAULT 0;
-    DECLARE customer_id_var INT;
+    DECLARE order_id_var INT;
+    DECLARE address_id_var INT;
 
     WHILE i < num_rows DO
-        SELECT ID INTO customer_id_var FROM customers ORDER BY RAND() LIMIT 1;
+        SELECT ID INTO order_id_var FROM orders ORDER BY RAND() LIMIT 1;
+        SELECT ID INTO address_id_var FROM addresses ORDER BY RAND() LIMIT 1;
 
-        INSERT INTO support_tickets (TICKET_NUMBER, CUSTOMER_ID, SUBJECT, DESCRIPTION, PRIORITY, STATUS, CATEGORY, ASSIGNED_TO)
+        INSERT INTO deliveries (DELIVERY_NUMBER, ORDER_ID, CARRIER, TRACKING_NUMBER, STATUS, SHIPPING_DATE, EXPECTED_DELIVERY_DATE, DELIVERY_ADDRESS_ID, RECIPIENT_NAME, RECIPIENT_PHONE, NOTES)
         VALUES (
-            CONCAT('TICKET', LPAD(i + 1, 6, '0')),
-            customer_id_var,
-            ELT(FLOOR(1 + RAND() * 10), 'Login Issues', 'Payment Problem', 'Product Defect', 'Shipping Delay', 'Feature Request', 'Technical Support', 'Account Access', 'Billing Question', 'Order Status', 'General Inquiry'),
-            CONCAT('Support ticket description for ticket ', i + 1),
-            ELT(FLOOR(1 + RAND() * 4), 'Low', 'Medium', 'High', 'Critical'),
-            ELT(FLOOR(1 + RAND() * 5), 'Open', 'In Progress', 'Resolved', 'Closed', 'Reopened'),
-            ELT(FLOOR(1 + RAND() * 6), 'Technical', 'Billing', 'Sales', 'General', 'Bug Report', 'Feature Request'),
-            ELT(FLOOR(1 + RAND() * 6), 'Support Agent A', 'Support Agent B', 'Support Agent C', 'Support Agent D', 'Support Agent E', 'Support Agent F')
+            CONCAT('DEL', LPAD(i + 1, 8, '0')),
+            order_id_var,
+            ELT(FLOOR(1 + RAND() * 6), 'Russian Post', 'CDEK', 'Boxberry', 'Pochta Express', 'DHL', 'FedEx'),
+            CONCAT('TRACK', LPAD(FLOOR(RAND() * 999999999), 12, '0')),
+            ELT(FLOOR(1 + RAND() * 5), 'Preparing', 'Shipped', 'In Transit', 'Delivered', 'Failed'),
+            DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 60) DAY),
+            DATE_ADD(DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 60) DAY), INTERVAL FLOOR(RAND() * 7 + 1) DAY),
+            address_id_var,
+            CONCAT('Recipient ', i + 1),
+            CONCAT('495', LPAD(FLOOR(RAND() * 10000000), 7, '0')),
+            CONCAT('Delivery notes for delivery ', i + 1, '. Handle with care.')
         );
         SET i = i + 1;
     END WHILE;
@@ -296,17 +307,81 @@ END$$
 
 DELIMITER ;
 
--- Generate initial data
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Generate demo data
 CALL GenerateCustomers(8000);
 CALL GenerateCompanies(2000);
 CALL GenerateProducts(5000);
 CALL GenerateAddresses(12000);
 CALL GenerateOrders(15000);
-CALL GenerateOrderItems(35000);
-CALL GenerateLeads(6000);
-CALL GenerateDeals(4000);
+CALL GenerateOrderItems(45000);
+CALL GenerateLeads(5000);
+CALL GenerateDeals(3000);
 CALL GenerateTasks(10000);
 CALL GenerateInvoices(8000);
-CALL GenerateSupportTickets(3000);
+CALL GenerateDeliveries(12000);
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- Fallback to ensure ORDERS and INVOICES are populated
+DELIMITER $$
+CREATE PROCEDURE FallbackEnsureOrdersInvoices()
+BEGIN
+    DECLARE ord_cnt INT; DECLARE inv_cnt INT; DECLARE cust_id INT; DECLARE addr_ship INT; DECLARE addr_bill INT; DECLARE deal_id INT; DECLARE i INT DEFAULT 1;
+    SELECT COUNT(*) INTO ord_cnt FROM orders;
+    IF ord_cnt = 0 THEN
+        WHILE i <= 2000 DO
+            SELECT ID INTO cust_id FROM customers ORDER BY RAND() LIMIT 1;
+            SELECT ID INTO addr_ship FROM addresses ORDER BY RAND() LIMIT 1;
+            SELECT ID INTO addr_bill FROM addresses ORDER BY RAND() LIMIT 1;
+            INSERT INTO orders (ORDER_NUMBER, CUSTOMER_ID, STATUS, PAYMENT_METHOD, PAYMENT_STATUS, SUBTOTAL, TAX_AMOUNT, SHIPPING_AMOUNT, DISCOUNT_AMOUNT, TOTAL_AMOUNT, ORDER_DATE, CURRENCY, SHIPPING_ADDRESS_ID, BILLING_ADDRESS_ID, NOTES)
+            VALUES (
+                CONCAT('ORDFB', LPAD(i, 8, '0')),
+                cust_id,
+                ELT(FLOOR(1 + RAND() * 6), 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'),
+                ELT(FLOOR(1 + RAND() * 6), 'Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'Cash', 'Crypto'),
+                ELT(FLOOR(1 + RAND() * 5), 'Pending', 'Paid', 'Failed', 'Refunded', 'Partially Refunded'),
+                ROUND(RAND()*5000+50,2),
+                ROUND(RAND()*1000,2),
+                ROUND(RAND()*500,2),
+                ROUND(RAND()*300,2),
+                ROUND(RAND()*7000+50,2),
+                DATE_SUB(NOW(), INTERVAL FLOOR(RAND()*365) DAY),
+                'RUB',
+                addr_ship,
+                addr_bill,
+                CONCAT('Fallback generated order #', i)
+            );
+            SET i = i + 1;
+        END WHILE;
+    END IF;
+
+    SELECT COUNT(*) INTO inv_cnt FROM invoices;
+    IF inv_cnt = 0 THEN
+        SET i = 1;
+        WHILE i <= 3000 DO
+            SELECT ID INTO cust_id FROM customers ORDER BY RAND() LIMIT 1;
+            SELECT ID INTO deal_id FROM deals ORDER BY RAND() LIMIT 1;
+            SELECT ID INTO ord_cnt FROM orders ORDER BY RAND() LIMIT 1; -- reuse ord_cnt variable to hold order id
+            INSERT INTO invoices (INVOICE_NUMBER, CUSTOMER_ID, ORDER_ID, DEAL_ID, INVOICE_DATE, DUE_DATE, STATUS, SUBTOTAL, TAX_RATE, TAX_AMOUNT, DISCOUNT_AMOUNT, TOTAL_AMOUNT, CURRENCY, NOTES)
+            VALUES (
+                CONCAT('INVFB', i, '/', YEAR(CURDATE())),
+                cust_id,
+                IF(RAND() < 0.7, ord_cnt, NULL),
+                IF(RAND() < 0.3, deal_id, NULL),
+                DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND()*180) DAY),
+                DATE_ADD(DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND()*180) DAY), INTERVAL 30 DAY),
+                ELT(FLOOR(1 + RAND() * 5), 'Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled'),
+                ROUND(RAND()*20000+500,2),
+                20.0,
+                ROUND(RAND()*4000+100,2),
+                ROUND(RAND()*2000,2),
+                ROUND(RAND()*25000+600,2),
+                'RUB',
+                CONCAT('Fallback generated invoice #', i)
+            );
+            SET i = i + 1;
+        END WHILE;
+    END IF;
+END$$
+DELIMITER ;
+CALL FallbackEnsureOrdersInvoices();
