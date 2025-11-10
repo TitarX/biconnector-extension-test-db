@@ -16,17 +16,9 @@
 
 ✅ **Управление проектом:**
 - Makefile (для Linux/Mac/Windows с Make)
-- run.bat (для Windows без Make)
 - Прямые docker-compose команды
 
 ## Быстрый запуск
-
-### Windows (без Make)
-```cmd
-run.bat up        # Запуск
-run.bat seed-data # Заполнение данными
-run.bat status    # Проверка статуса
-```
 
 ### С Make
 ```bash
