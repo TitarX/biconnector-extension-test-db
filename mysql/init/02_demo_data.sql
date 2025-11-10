@@ -310,17 +310,17 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Generate demo data
-CALL GenerateCustomers(8000);
-CALL GenerateCompanies(2000);
-CALL GenerateProducts(5000);
-CALL GenerateAddresses(12000);
-CALL GenerateOrders(15000);
-CALL GenerateOrderItems(45000);
-CALL GenerateLeads(5000);
-CALL GenerateDeals(3000);
-CALL GenerateTasks(10000);
-CALL GenerateInvoices(8000);
-CALL GenerateDeliveries(12000);
+CALL GenerateCustomers(80);
+CALL GenerateCompanies(20);
+CALL GenerateProducts(500);
+CALL GenerateAddresses(120);
+CALL GenerateOrders(150);
+CALL GenerateOrderItems(450);
+CALL GenerateLeads(50);
+CALL GenerateDeals(30);
+CALL GenerateTasks(100);
+CALL GenerateInvoices(80);
+CALL GenerateDeliveries(120);
 
 -- Fallback to ensure ORDERS and INVOICES are populated
 DELIMITER $$

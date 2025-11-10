@@ -5,7 +5,7 @@
 SET client_encoding = 'UTF8';
 SET timezone = 'UTC';
 
--- Generate Companies data (2000 records)
+-- Generate Companies data (20 records)
 INSERT INTO companies ("COMPANY_NAME", "LEGAL_NAME", "REGISTRATION_NUMBER", "TAX_NUMBER", "INDUSTRY", "COMPANY_SIZE", "WEBSITE", "FOUNDED_YEAR", "DESCRIPTION", "ANNUAL_REVENUE", "EMPLOYEE_COUNT", "LOGO_URL")
 SELECT
     'Company ' || gs || ' LLC',
@@ -37,9 +37,9 @@ SELECT
     (random() * 100000000)::decimal(15,2),
     (random() * 10000)::int + 1,
     'https://logo.company' || gs || '.com/logo.png'
-FROM generate_series(1, 2000) AS gs;
+FROM generate_series(1, 20) AS gs;
 
--- Generate Customers data (8000 records)
+-- Generate Customers data (80 records)
 INSERT INTO customers ("CUSTOMER_CODE", "FIRST_NAME", "LAST_NAME", "EMAIL", "PHONE", "MOBILE", "DATE_OF_BIRTH", "GENDER", "REGISTRATION_DATE", "LAST_LOGIN", "STATUS", "CUSTOMER_TYPE", "PREFERRED_LANGUAGE", "TIMEZONE", "AVATAR_URL", "NOTES")
 SELECT
     'CUST' || LPAD(gs::text, 6, '0'),
@@ -123,9 +123,9 @@ SELECT
     END,
     'https://avatar.example.com/user' || gs || '.jpg',
     'Customer notes for user ' || gs || '. Generated automatically.'
-FROM generate_series(1, 8000) AS gs;
+FROM generate_series(1, 80) AS gs;
 
--- Generate Customer-Company relationships (2000 records)
+-- Generate Customer-Company relationships (20 records)
 INSERT INTO customer_companies ("CUSTOMER_ID", "COMPANY_ID", "ROLE", "START_DATE", "END_DATE", "IS_PRIMARY")
 SELECT
     (SELECT "ID" FROM customers ORDER BY random() LIMIT 1),
@@ -140,9 +140,9 @@ SELECT
     '2020-01-01'::date + (random() * 1460)::int,
     CASE WHEN random() < 0.7 THEN NULL ELSE '2020-01-01'::date + (random() * 1460)::int + 365 END,
     random() < 0.8
-FROM generate_series(1, 2000) AS gs;
+FROM generate_series(1, 20) AS gs;
 
--- Generate Addresses data (12000 records)
+-- Generate Addresses data (120 records)
 INSERT INTO addresses ("CUSTOMER_ID", "COMPANY_ID", "ADDRESS_TYPE", "STREET_ADDRESS", "APARTMENT", "CITY", "STATE_PROVINCE", "POSTAL_CODE", "COUNTRY", "LATITUDE", "LONGITUDE", "IS_DEFAULT")
 SELECT
     CASE WHEN random() < 0.7 THEN (SELECT "ID" FROM customers ORDER BY random() LIMIT 1) ELSE NULL END,
@@ -201,9 +201,9 @@ SELECT
     55.7558 + (random() - 0.5) * 10,
     37.6176 + (random() - 0.5) * 10,
     random() < 0.3
-FROM generate_series(1, 12000) AS gs;
+FROM generate_series(1, 120) AS gs;
 
--- Generate Products data (5000 records)
+-- Generate Products data (50 records)
 INSERT INTO products ("PRODUCT_CODE", "NAME", "DESCRIPTION", "CATEGORY", "SUBCATEGORY", "BRAND", "PRICE", "COST", "WEIGHT", "DIMENSIONS", "COLOR", "SIZE", "MATERIAL", "STOCK_QUANTITY", "MIN_STOCK_LEVEL", "IS_ACTIVE", "IMAGE_URL")
 SELECT
     'PROD' || LPAD(gs::text, 6, '0'),
@@ -270,9 +270,9 @@ SELECT
     (random() * 50)::int + 5,
     random() < 0.9,
     'https://images.example.com/product' || gs || '.jpg'
-FROM generate_series(1, 5000) AS gs;
+FROM generate_series(1, 50) AS gs;
 
--- Generate Orders data (15000 records)
+-- Generate Orders data (150 records)
 INSERT INTO orders ("ORDER_NUMBER", "CUSTOMER_ID", "ORDER_DATE", "STATUS", "PAYMENT_METHOD", "PAYMENT_STATUS", "SUBTOTAL", "TAX_AMOUNT", "SHIPPING_AMOUNT", "DISCOUNT_AMOUNT", "TOTAL_AMOUNT", "CURRENCY", "NOTES")
 SELECT
     'ORDER' || LPAD(gs::text, 8, '0'),
@@ -308,9 +308,9 @@ SELECT
     (random() * 120000 + 500)::decimal(10,2),
     'RUB',
     'Order notes for order ' || gs || '. Automatically generated.'
-FROM generate_series(1, 15000) AS gs;
+FROM generate_series(1, 150) AS gs;
 
--- Generate Order Items data (45000 records)
+-- Generate Order Items data (450 records)
 INSERT INTO order_items ("ORDER_ID", "PRODUCT_ID", "QUANTITY", "UNIT_PRICE", "TOTAL_PRICE", "DISCOUNT_AMOUNT")
 SELECT
     (SELECT "ID" FROM orders ORDER BY random() LIMIT 1),
@@ -319,9 +319,9 @@ SELECT
     (random() * 50000 + 100)::decimal(10,2),
     ((random() * 5 + 1)::int * (random() * 50000 + 100))::decimal(10,2),
     (random() * 5000)::decimal(10,2)
-FROM generate_series(1, 45000) AS gs;
+FROM generate_series(1, 450) AS gs;
 
--- Generate Leads data (5000 records)
+-- Generate Leads data (50 records)
 INSERT INTO leads ("LEAD_CODE", "FIRST_NAME", "LAST_NAME", "COMPANY_NAME", "EMAIL", "PHONE", "SOURCE", "STATUS", "SCORE", "ASSIGNED_TO", "NOTES")
 SELECT
     'LEAD' || LPAD(gs::text, 6, '0'),
@@ -350,9 +350,9 @@ SELECT
     (random() * 100)::int,
     'Sales Rep ' || ((random() * 5)::int + 1),
     'Lead notes for prospect ' || gs
-FROM generate_series(1, 5000) AS gs;
+FROM generate_series(1, 50) AS gs;
 
--- Generate Deals data (3000 records)
+-- Generate Deals data (30 records)
 INSERT INTO deals ("DEAL_NAME", "CUSTOMER_ID", "LEAD_ID", "STAGE", "VALUE", "CURRENCY", "PROBABILITY", "EXPECTED_CLOSE_DATE", "ASSIGNED_TO", "NOTES")
 SELECT
     'Deal ' || gs || ' - ' || CASE (random() * 5)::int
@@ -378,9 +378,9 @@ SELECT
     '2024-01-01'::date + (random() * 365)::int,
     'Sales Rep ' || ((random() * 5)::int + 1),
     'Deal notes for deal ' || gs
-FROM generate_series(1, 3000) AS gs;
+FROM generate_series(1, 30) AS gs;
 
--- Generate Tasks data (10000 records)
+-- Generate Tasks data (100 records)
 INSERT INTO tasks ("TITLE", "DESCRIPTION", "CUSTOMER_ID", "LEAD_ID", "DEAL_ID", "ASSIGNED_TO", "STATUS", "PRIORITY", "DUE_DATE", "ESTIMATED_HOURS")
 SELECT
     'Task ' || gs || ' - ' || CASE (random() * 5)::int
@@ -409,9 +409,9 @@ SELECT
     END,
     '2024-01-01'::timestamp + (random() * 365)::int * interval '1 day',
     (random() * 40 + 1)::decimal(5,2)
-FROM generate_series(1, 10000) AS gs;
+FROM generate_series(1, 100) AS gs;
 
--- Generate Invoices data (8000 records)
+-- Generate Invoices data (80 records)
 INSERT INTO invoices ("INVOICE_NUMBER", "CUSTOMER_ID", "ORDER_ID", "DEAL_ID", "INVOICE_DATE", "DUE_DATE", "STATUS", "SUBTOTAL", "TAX_RATE", "TAX_AMOUNT", "DISCOUNT_AMOUNT", "TOTAL_AMOUNT", "CURRENCY", "NOTES", "PAYMENT_DATE")
 SELECT
     'INV' || gs || '/' || EXTRACT(YEAR FROM CURRENT_DATE),
@@ -435,9 +435,9 @@ SELECT
     'RUB',
     'Invoice notes for invoice ' || gs || '. Payment terms: 30 days.',
     CASE WHEN random() < 0.6 THEN '2024-01-01'::date + (random() * 300)::int ELSE NULL END
-FROM generate_series(1, 8000) AS gs;
+FROM generate_series(1, 80) AS gs;
 
--- Generate Deliveries data (12000 records)
+-- Generate Deliveries data (120 records)
 INSERT INTO deliveries ("DELIVERY_NUMBER", "ORDER_ID", "CARRIER", "TRACKING_NUMBER", "STATUS", "SHIPPING_DATE", "EXPECTED_DELIVERY_DATE", "ACTUAL_DELIVERY_DATE", "DELIVERY_ADDRESS_ID", "RECIPIENT_NAME", "RECIPIENT_PHONE", "NOTES")
 SELECT
     'DEL' || LPAD(gs::text, 8, '0'),
@@ -465,7 +465,7 @@ SELECT
     'Recipient ' || gs,
     '+7495' || LPAD((random() * 10000000)::int::text, 7, '0'),
     'Delivery notes for delivery ' || gs
-FROM generate_series(1, 12000) AS gs;
+FROM generate_series(1, 120) AS gs;
 
 -- Update sequences to correct values
 SELECT setval('customers_id_seq', COALESCE((SELECT MAX("ID") FROM customers), 1));

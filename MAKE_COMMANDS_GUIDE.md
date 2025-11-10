@@ -28,13 +28,13 @@ make stats
 
 ### Starting and Stopping
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `make start` | Start database containers | Basic startup with 45-second initialization wait, creates shared network |
-| `make down` | Stop and remove containers (preserves data) | Safe shutdown maintaining data volumes |
-| `make stop` | Stop containers without removing | Quick stop for temporary shutdown |
-| `make remove` | Remove stopped containers | Cleanup after stop command |
-| `make restart` | Restart containers | Equivalent to down + start |
+| Command | Description | Usage                                                                    |
+|---------|-------------|--------------------------------------------------------------------------|
+| `make start` | Start database containers | Basic startup with 30-second initialization wait, creates shared network |
+| `make down` | Stop and remove containers (preserves data) | Safe shutdown maintaining data volumes                                   |
+| `make stop` | Stop containers without removing | Quick stop for temporary shutdown                                        |
+| `make remove` | Remove stopped containers | Cleanup after stop command                                               |
+| `make restart` | Restart containers | Equivalent to down + start                                               |
 
 ### Example Usage:
 ```bash

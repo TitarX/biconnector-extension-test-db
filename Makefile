@@ -60,8 +60,8 @@ start:
 	@docker network create shared_db_network 2>nul || echo "Network 'shared_db_network' already exists"
 	@echo "Starting customer database containers..."
 	docker-compose up -d
-	@echo "Waiting for database initialization (45 seconds)..."
-	@sleep 45 2>/dev/null || timeout 45 2>/dev/null || ping 127.0.0.1 -n 46 >nul 2>&1
+	@echo "Waiting for database initialization (30 seconds)..."
+	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 30 >nul 2>&1
 	@echo ""
 	@echo "Customer databases are ready!"
 	@echo ""
@@ -157,8 +157,8 @@ seed-data:
 	@echo "- Field names: UPPERCASE (ID, CUSTOMER_CODE, FIRST_NAME, etc.)"
 	@echo ""
 	@echo "To manually regenerate MySQL data (use stored procedures):"
-	@echo "  docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateCustomers(8000);'"
-	@echo "  docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateOrders(15000);'"
+	@echo "  docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateCustomers(80);'"
+	@echo "  docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e 'CALL GenerateOrders(150);'"
 	@echo ""
 	@echo "Current data statistics:"
 	@$(MAKE) stats
