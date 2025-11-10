@@ -273,7 +273,7 @@ SELECT
 FROM generate_series(1, 50) AS gs;
 
 -- Generate Orders data (150 records)
-INSERT INTO orders ("ORDER_NUMBER", "CUSTOMER_ID", "ORDER_DATE", "STATUS", "PAYMENT_METHOD", "PAYMENT_STATUS", "SUBTOTAL", "TAX_AMOUNT", "SHIPPING_AMOUNT", "DISCOUNT_AMOUNT", "TOTAL_AMOUNT", "CURRENCY", "NOTES")
+INSERT INTO orders ("ORDER_NUMBER", "CUSTOMER_ID", "ORDER_DATE", "STATUS", "PAYMENT_METHOD", "PAYMENT_STATUS", "SUBTOTAL", "TAX_AMOUNT", "SHIPPING_AMOUNT", "DISCOUNT_AMOUNT", "TOTAL_AMOUNT", "CURRENCY", "SHIPPING_ADDRESS_ID", "BILLING_ADDRESS_ID", "NOTES", "TRACKING_NUMBER", "SHIPPED_DATE", "DELIVERED_DATE")
 SELECT
     'ORDER' || LPAD(gs::text, 8, '0'),
     (SELECT "ID" FROM customers ORDER BY random() LIMIT 1),
@@ -307,7 +307,12 @@ SELECT
     (random() * 10000)::decimal(10,2),
     (random() * 120000 + 500)::decimal(10,2),
     'RUB',
-    'Order notes for order ' || gs || '. Automatically generated.'
+    (SELECT "ID" FROM addresses ORDER BY random() LIMIT 1),
+    (SELECT "ID" FROM addresses ORDER BY random() LIMIT 1),
+    'Order notes for order ' || gs || '. Automatically generated.',
+    CASE WHEN random() < 0.7 THEN 'TRACK' || LPAD((random() * 999999999)::bigint::text, 12, '0') ELSE NULL END,
+    CASE WHEN random() < 0.6 THEN '2023-01-01'::timestamp + (random() * 700)::int * interval '1 day' + interval '1 day' ELSE NULL END,
+    CASE WHEN random() < 0.5 THEN '2023-01-01'::timestamp + (random() * 700)::int * interval '1 day' + interval '5 day' ELSE NULL END
 FROM generate_series(1, 150) AS gs;
 
 -- Generate Order Items data (450 records)
@@ -353,7 +358,7 @@ SELECT
 FROM generate_series(1, 50) AS gs;
 
 -- Generate Deals data (30 records)
-INSERT INTO deals ("DEAL_NAME", "CUSTOMER_ID", "LEAD_ID", "STAGE", "VALUE", "CURRENCY", "PROBABILITY", "EXPECTED_CLOSE_DATE", "ASSIGNED_TO", "NOTES")
+INSERT INTO deals ("DEAL_NAME", "CUSTOMER_ID", "LEAD_ID", "STAGE", "VALUE", "CURRENCY", "PROBABILITY", "EXPECTED_CLOSE_DATE", "ACTUAL_CLOSE_DATE", "ASSIGNED_TO", "NOTES")
 SELECT
     'Deal ' || gs || ' - ' || CASE (random() * 5)::int
         WHEN 0 THEN 'Software License'
@@ -362,8 +367,8 @@ SELECT
         WHEN 3 THEN 'Support'
         ELSE 'Training'
     END,
-    (SELECT "ID" FROM customers ORDER BY random() LIMIT 1),
-    (SELECT "ID" FROM leads ORDER BY random() LIMIT 1),
+    CASE WHEN random() < 0.8 THEN (SELECT "ID" FROM customers ORDER BY random() LIMIT 1) ELSE NULL END,
+    CASE WHEN random() < 0.4 THEN (SELECT "ID" FROM leads ORDER BY random() LIMIT 1) ELSE NULL END,
     CASE (random() * 6)::int
         WHEN 0 THEN 'Prospecting'
         WHEN 1 THEN 'Qualification'
@@ -372,16 +377,23 @@ SELECT
         WHEN 4 THEN 'Closed Won'
         ELSE 'Closed Lost'
     END,
-    (random() * 100000 + 1000)::decimal(12,2),
+    (random() * 5000000 + 10000)::decimal(12,2),
     'RUB',
     (random() * 100)::int,
     '2024-01-01'::date + (random() * 365)::int,
-    'Sales Rep ' || ((random() * 5)::int + 1),
-    'Deal notes for deal ' || gs
+    CASE WHEN random() < 0.3 THEN '2024-01-01'::date + (random() * 300)::int ELSE NULL END,
+    CASE (random() * 5)::int
+        WHEN 0 THEN 'Sales Rep 1'
+        WHEN 1 THEN 'Sales Rep 2'
+        WHEN 2 THEN 'Sales Rep 3'
+        WHEN 3 THEN 'Sales Rep 4'
+        ELSE 'Sales Manager'
+    END,
+    'Deal notes for deal ' || gs || '. Generated automatically.'
 FROM generate_series(1, 30) AS gs;
 
 -- Generate Tasks data (100 records)
-INSERT INTO tasks ("TITLE", "DESCRIPTION", "CUSTOMER_ID", "LEAD_ID", "DEAL_ID", "ASSIGNED_TO", "STATUS", "PRIORITY", "DUE_DATE", "ESTIMATED_HOURS")
+INSERT INTO tasks ("TITLE", "DESCRIPTION", "CUSTOMER_ID", "LEAD_ID", "DEAL_ID", "ASSIGNED_TO", "STATUS", "PRIORITY", "DUE_DATE", "COMPLETED_DATE", "ESTIMATED_HOURS", "ACTUAL_HOURS")
 SELECT
     'Task ' || gs || ' - ' || CASE (random() * 5)::int
         WHEN 0 THEN 'Follow up'
@@ -391,9 +403,9 @@ SELECT
         ELSE 'Analysis'
     END,
     'Task description for task number ' || gs,
-    (SELECT "ID" FROM customers ORDER BY random() LIMIT 1),
-    (SELECT "ID" FROM leads ORDER BY random() LIMIT 1),
-    (SELECT "ID" FROM deals ORDER BY random() LIMIT 1),
+    CASE WHEN random() < 0.6 THEN (SELECT "ID" FROM customers ORDER BY random() LIMIT 1) ELSE NULL END,
+    CASE WHEN random() < 0.3 THEN (SELECT "ID" FROM leads ORDER BY random() LIMIT 1) ELSE NULL END,
+    CASE WHEN random() < 0.4 THEN (SELECT "ID" FROM deals ORDER BY random() LIMIT 1) ELSE NULL END,
     'Sales Rep ' || ((random() * 5)::int + 1),
     CASE (random() * 4)::int
         WHEN 0 THEN 'Not Started'
@@ -407,8 +419,10 @@ SELECT
         WHEN 2 THEN 'High'
         ELSE 'Critical'
     END,
-    '2024-01-01'::timestamp + (random() * 365)::int * interval '1 day',
-    (random() * 40 + 1)::decimal(5,2)
+    '2024-01-01'::timestamp + (random() * 365)::int * interval '1 day' + (random() * 24)::int * interval '1 hour',
+    CASE WHEN random() < 0.4 THEN '2024-01-01'::timestamp + (random() * 300)::int * interval '1 day' ELSE NULL END,
+    (random() * 40 + 1)::decimal(5,2),
+    CASE WHEN random() < 0.4 THEN (random() * 50 + 0.5)::decimal(5,2) ELSE NULL END
 FROM generate_series(1, 100) AS gs;
 
 -- Generate Invoices data (80 records)
@@ -416,8 +430,8 @@ INSERT INTO invoices ("INVOICE_NUMBER", "CUSTOMER_ID", "ORDER_ID", "DEAL_ID", "I
 SELECT
     'INV' || gs || '/' || EXTRACT(YEAR FROM CURRENT_DATE),
     (SELECT "ID" FROM customers ORDER BY random() LIMIT 1),
-    (SELECT "ID" FROM orders ORDER BY random() LIMIT 1),
-    (SELECT "ID" FROM deals ORDER BY random() LIMIT 1),
+    CASE WHEN random() < 0.7 THEN (SELECT "ID" FROM orders ORDER BY random() LIMIT 1) ELSE NULL END,
+    CASE WHEN random() < 0.3 THEN (SELECT "ID" FROM deals ORDER BY random() LIMIT 1) ELSE NULL END,
     '2024-01-01'::date + (random() * 330)::int,
     '2024-01-01'::date + (random() * 330)::int + 30,
     CASE (random() * 5)::int

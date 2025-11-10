@@ -310,8 +310,8 @@ SELECT
     (SELECT "ID" FROM addresses ORDER BY random() LIMIT 1),
     'Order notes for order ' || gs || '. Automatically generated.',
     CASE WHEN random() < 0.7 THEN 'TRACK' || LPAD((random() * 999999999)::bigint::text, 12, '0') ELSE NULL END,
-    CASE WHEN random() < 0.6 THEN '2023-01-01'::timestamp + (random() * 700)::int * interval '1 day' + 1 * interval 'day' ELSE NULL END,
-    CASE WHEN random() < 0.5 THEN '2023-01-01'::timestamp + (random() * 700)::int * interval '1 day' + 5 * interval 'day' ELSE NULL END
+    CASE WHEN random() < 0.6 THEN '2023-01-01'::timestamp + (random() * 700)::int * interval '1 day' + interval '1 day' ELSE NULL END,
+    CASE WHEN random() < 0.5 THEN '2023-01-01'::timestamp + (random() * 700)::int * interval '1 day' + interval '5 day' ELSE NULL END
 FROM generate_series(1, 150) AS gs;
 
 -- Generate Order Items data
