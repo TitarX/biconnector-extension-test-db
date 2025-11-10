@@ -385,3 +385,24 @@ BEGIN
 END$$
 DELIMITER ;
 CALL FallbackEnsureOrdersInvoices();
+
+-- Direct invoice generation as additional fallback
+INSERT IGNORE INTO invoices (INVOICE_NUMBER, CUSTOMER_ID, ORDER_ID, DEAL_ID, INVOICE_DATE, DUE_DATE, STATUS, SUBTOTAL, TAX_RATE, TAX_AMOUNT, DISCOUNT_AMOUNT, TOTAL_AMOUNT, CURRENCY, NOTES)
+SELECT
+    CONCAT('INV', LPAD(c.ID, 8, '0'), '/', YEAR(CURDATE())),
+    c.ID,
+    (SELECT o.ID FROM orders o ORDER BY RAND() LIMIT 1),
+    (SELECT d.ID FROM deals d ORDER BY RAND() LIMIT 1),
+    DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 180) DAY),
+    DATE_ADD(DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 180) DAY), INTERVAL 30 DAY),
+    ELT(FLOOR(1 + RAND() * 5), 'Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled'),
+    ROUND(RAND() * 20000 + 500, 2),
+    20.0,
+    ROUND((RAND() * 20000 + 500) * 0.2, 2),
+    ROUND(RAND() * 2000, 2),
+    ROUND((RAND() * 20000 + 500) * 1.2 - RAND() * 2000, 2),
+    'RUB',
+    CONCAT('Direct invoice generation for customer #', c.ID)
+FROM customers c
+LIMIT 5000;
+
