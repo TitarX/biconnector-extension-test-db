@@ -57,11 +57,11 @@ help:
 # Start database containers
 start:
 	@echo "Ensuring shared network exists..."
-	@docker network create shared_db_network 2>nul || echo "Network 'shared_db_network' already exists"
+	-@docker network create shared_db_network 2>/dev/null || echo "Network 'shared_db_network' already exists or will be created by compose"
 	@echo "Starting customer database containers..."
 	docker-compose up -d
 	@echo "Waiting for database initialization (30 seconds)..."
-	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 30 >nul 2>&1
+	@sleep 30 || timeout /t 30 /nobreak >nul 2>&1 || ping -n 31 127.0.0.1 >nul
 	@echo ""
 	@echo "Customer databases are ready!"
 	@echo ""
@@ -109,7 +109,7 @@ status:
 	@docker-compose ps
 	@echo ""
 	@echo "=== Volume Information ==="
-	@docker volume ls | grep bce_test_db 2>/dev/null || docker volume ls | findstr bce_test_db 2>nul || echo "No volumes found"
+	@docker volume ls | grep bce_test_db || docker volume ls | findstr bce_test_db || echo "No volumes found"
 
 # Recreate MySQL container only
 recreate-mysql:
@@ -118,7 +118,7 @@ recreate-mysql:
 	docker-compose rm -f mysql
 	docker-compose up -d mysql
 	@echo "Waiting for MySQL initialization..."
-	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 31 >nul 2>&1
+	@sleep 30 || timeout /t 30 /nobreak >nul 2>&1 || ping -n 31 127.0.0.1 >nul
 	@echo "MySQL container recreated successfully!"
 
 # Recreate PostgreSQL container only
@@ -128,7 +128,7 @@ recreate-postgres:
 	docker-compose rm -f postgres
 	docker-compose up -d postgres
 	@echo "Waiting for PostgreSQL initialization..."
-	@sleep 30 2>/dev/null || timeout 30 2>/dev/null || ping 127.0.0.1 -n 31 >nul 2>&1
+	@sleep 30 || timeout /t 30 /nobreak >nul 2>&1 || ping -n 31 127.0.0.1 >nul
 	@echo "PostgreSQL container recreated successfully!"
 
 # Recreate all containers
@@ -179,10 +179,10 @@ stats:
 	@echo "=== Customer Database Statistics ==="
 	@echo ""
 	@echo "MySQL Statistics:"
-	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals;" 2>nul || echo "MySQL not accessible"
+	-@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals;" || echo "MySQL not accessible"
 	@echo ""
 	@echo "PostgreSQL Statistics:"
-	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
+	-@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals ORDER BY table_name;" || echo "PostgreSQL not accessible"
 
 # Full cleanup - removes containers and data volumes
 clean:
@@ -204,7 +204,7 @@ rebuild: clean
 # Full initialization: start containers + populate data
 init: start
 	@echo "Waiting for databases to be ready before seeding..."
-	@sleep 15 2>/dev/null || timeout 15 2>/dev/null || ping 127.0.0.1 -n 16 >nul 2>&1
+	@sleep 15 || timeout /t 15 /nobreak >nul 2>&1 || ping -n 16 127.0.0.1 >nul
 	@$(MAKE) seed-data
 	@echo ""
 	@echo "=== Full initialization completed! ==="
@@ -225,21 +225,21 @@ postgres-cli:
 # Create database backups
 backup:
 	@echo "Creating database backups..."
-	@if not exist backups mkdir backups
+	@mkdir -p backups 2>/dev/null || mkdir backups 2>nul || echo "Backups directory exists"
 	@echo "Backing up MySQL customer database..."
-	@docker exec test_mysql_db mysqldump -u testuser -ptestpass123 --single-transaction --routines --triggers customer_db > backups/mysql_customer_backup_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%_%time:~0,2%-%time:~3,2%-%time:~6,2%.sql
+	docker exec test_mysql_db mysqldump -u testuser -ptestpass123 --single-transaction --routines --triggers customer_db > backups/mysql_customer_backup.sql
 	@echo "Backing up PostgreSQL customer database..."
-	@docker exec test_postgres_db pg_dump -U testuser --verbose --clean --no-acl --no-owner -d customer_db > backups/postgres_customer_backup_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%_%time:~0,2%-%time:~3,2%-%time:~6,2%.sql
+	docker exec test_postgres_db pg_dump -U testuser --verbose --clean --no-acl --no-owner -d customer_db > backups/postgres_customer_backup.sql
 	@echo ""
 	@echo "Database backups created in backups/ directory"
 	@echo "Files created:"
-	@dir backups\*backup*.sql /B 2>nul | findstr backup
+	@ls -la backups/*backup*.sql 2>/dev/null || dir backups\*backup*.sql 2>nul || echo "No backup files found"
 
 # Restore from latest backup (interactive)
 restore:
 	@echo "=== Database Restore ==="
 	@echo "Available backup files:"
-	@dir backups\*.sql /B 2>nul || echo "No backup files found in backups/ directory"
+	@ls -la backups/*.sql 2>/dev/null || dir backups\*.sql 2>nul || echo "No backup files found in backups/ directory"
 	@echo ""
 	@echo "WARNING: This will overwrite existing data!"
 	@echo "Make sure containers are running (make start)"
@@ -249,15 +249,6 @@ restore:
 	@echo "MySQL:      docker exec -i test_mysql_db mysql -u testuser -ptestpass123 customer_db < backups/filename.sql"
 	@echo "PostgreSQL: docker exec -i test_postgres_db psql -U testuser -d customer_db -f /tmp/filename.sql"
 
-# Quick database statistics
-stats:
-	@echo "=== Customer Database Statistics ==="
-	@echo ""
-	@echo "MySQL Statistics:"
-	@docker exec test_mysql_db mysql -u testuser -ptestpass123 customer_db -e "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals;" 2>nul || echo "MySQL not accessible"
-	@echo ""
-	@echo "PostgreSQL Statistics:"
-	@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals ORDER BY table_name;" 2>nul || echo "PostgreSQL not accessible"
 
 # Container shell access commands
 shell-mysql:
@@ -273,7 +264,7 @@ shell-postgres:
 # Network management commands
 create-network:
 	@echo "Creating shared Docker network for database access..."
-	@docker network create shared_db_network 2>nul || echo "Network 'shared_db_network' already exists"
+	-@docker network create shared_db_network 2>/dev/null || echo "Network 'shared_db_network' already exists"
 	@echo "Network 'shared_db_network' is ready for use"
 	@echo ""
 	@echo "Other containers can now connect using:"
@@ -290,7 +281,7 @@ remove-network:
 	@echo "Stopping containers before removing network..."
 	@$(MAKE) down
 	@echo "Removing shared Docker network..."
-	@docker network rm shared_db_network 2>nul || echo "Network 'shared_db_network' does not exist"
+	-@docker network rm shared_db_network 2>/dev/null || echo "Network 'shared_db_network' does not exist or already removed"
 	@echo "Network removed successfully"
 
 # Fix network issues - recreate network with correct labels
@@ -299,7 +290,7 @@ fix-network:
 	@echo "Stopping containers..."
 	@$(MAKE) down
 	@echo "Removing existing network..."
-	@docker network rm shared_db_network 2>nul || echo "Network doesn't exist"
+	-@docker network rm shared_db_network 2>/dev/null || echo "Network doesn't exist"
 	@echo "Creating network with correct configuration..."
 	@docker network create shared_db_network
 	@echo "Network fixed successfully"
@@ -308,13 +299,13 @@ network-info:
 	@echo "=== Docker Network Information ==="
 	@echo ""
 	@echo "Shared network details:"
-	@docker network inspect shared_db_network 2>nul || echo "Network 'shared_db_network' not found. Run 'make create-network' first."
+	-@docker network inspect shared_db_network 2>/dev/null || echo "Network 'shared_db_network' not found. Run 'make create-network' first."
 	@echo ""
 	@echo "Connected containers:"
-	@docker network ls --filter name=shared_db_network --format "table {{.Name}}\t{{.Driver}}\t{{.Scope}}" 2>nul || echo "No networks found"
+	-@docker network ls --filter name=shared_db_network --format "table {{.Name}}\t{{.Driver}}\t{{.Scope}}" || echo "No networks found"
 	@echo ""
 	@echo "Database container status:"
-	@docker ps --filter name=test_mysql_db --filter name=test_postgres_db --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>nul || echo "No database containers running"
+	-@docker ps --filter name=test_mysql_db --filter name=test_postgres_db --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "No database containers running"
 	@echo ""
 	@echo "Connection examples for other containers:"
 	@echo "  MySQL connection string: mysql://testuser:testpass123@mysql:3306/customer_db"
