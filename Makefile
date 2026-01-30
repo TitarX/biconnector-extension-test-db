@@ -185,14 +185,28 @@ stats:
 	-@docker exec test_postgres_db psql -U testuser -d customer_db -c "SELECT 'customers' as table_name, COUNT(*) as count FROM customers UNION SELECT 'companies', COUNT(*) FROM companies UNION SELECT 'products', COUNT(*) FROM products UNION SELECT 'orders', COUNT(*) FROM orders UNION SELECT 'order_items', COUNT(*) FROM order_items UNION SELECT 'leads', COUNT(*) FROM leads UNION SELECT 'tasks', COUNT(*) FROM tasks UNION SELECT 'deals', COUNT(*) FROM deals ORDER BY table_name;" || echo "PostgreSQL not accessible"
 
 # Full cleanup - removes containers and data volumes
-clean:
-	@echo "WARNING: This will remove all containers and data volumes!"
-	@echo "Press Ctrl+C to cancel or Enter to continue..."
-	@read -p "" dummy 2>/dev/null || true
-	@echo "Performing full cleanup..."
-	docker-compose down -v --remove-orphans
-	docker system prune -f
-	@echo "Full cleanup completed!"
+#clean:
+#	@echo "WARNING: This will remove all containers and data volumes!"
+#	@echo "Press Ctrl+C to cancel or Enter to continue..."
+#	@read -p "" dummy 2>/dev/null || true
+#	@echo "Performing full cleanup..."
+#	docker-compose down -v --remove-orphans
+#	docker system prune -f
+#	@echo "Full cleanup completed!"
+
+clean: ## Stop and remove containers
+	@echo "$(RED)🧹 Cleaning containers...$(NC)"
+	docker-compose down -v
+
+clean-all: ## Full cleanup (containers, images, volumes)
+	@echo "$(RED)🧹 Full cleanup...$(NC)"
+	docker-compose down -v --rmi all
+	@echo "$(GREEN)✅ Cleanup completed$(NC)"
+
+prune: ## Clean unused Docker resources
+	@echo "$(RED)🧹 Pruning unused Docker resources...$(NC)"
+	docker system prune -a -f
+	@echo "$(GREEN)✅ Docker resources pruned$(NC)"
 
 # Rebuild containers from scratch
 rebuild: clean
