@@ -9,14 +9,16 @@
 ├── Makefile                   # Команды для управления проектом
 ├── mysql/
 │   ├── init/
+│   │   ├── 00_grant_remote_access.sql  # Настройка удалённого доступа
 │   │   └── 01_create_tables.sql  # Создание таблиц MySQL
 │   └── seed/
 │       └── demo_data.sql         # Демо данные для MySQL
 ├── postgres/
 │   ├── init/
 │   │   └── 01_create_tables.sql  # Создание таблиц PostgreSQL
-│   └── seed/
-│       └── demo_data.sql         # Демо данные для PostgreSQL
+│   ├── seed/
+│   │   └── demo_data.sql         # Демо данные для PostgreSQL
+│   └── pg_hba.conf               # Настройка удалённого доступа PostgreSQL
 └── README.md                  # Этот файл
 ```
 
