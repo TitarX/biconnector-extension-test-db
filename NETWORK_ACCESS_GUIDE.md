@@ -2,6 +2,17 @@
 
 This guide explains how to connect to the MySQL and PostgreSQL databases from other Docker containers running on the same host.
 
+## External Access Configuration
+
+External network access to databases is controlled by the `DB_HOST_BIND` parameter in the `.env` file:
+
+| Value | Description |
+|-------|-------------|
+| `0.0.0.0` | Databases accessible from external networks (default) |
+| `127.0.0.1` | Databases accessible only from localhost |
+
+> **Note:** Docker containers on the `shared_db_network` can always connect to databases regardless of `DB_HOST_BIND` setting.
+
 ## Quick Setup
 
 1. **Start the databases** (this automatically creates the shared network):
